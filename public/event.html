@@ -33,11 +33,16 @@
         <p class="eyebrow">You're invited to add photos</p>
         <h1 id="event-title"></h1>
         <p class="event-meta" id="event-meta"></p>
+        <div class="header-actions" id="host-actions" style="display:none">
+          <a class="btn btn-small" id="header-upgrade" href="#" target="_blank" rel="noopener">Unlock unlimited photos, $19</a>
+        </div>
+        <div class="header-actions" id="paid-badge" style="display:none">
+          <span class="badge-pill">Party album &middot; unlimited photos</span>
+        </div>
       </header>
 
       <div class="host-bar" id="host-bar" style="display:none">
         You're the host. Tap any photo to open it, then delete it if someone got silly.
-        <span id="host-upgrade" style="display:none"> &middot; <a id="host-upgrade-link" href="#" target="_blank" rel="noopener">Unlock unlimited photos, $19</a></span>
       </div>
 
       <div class="limit-note" id="limit-note" style="display:none">
@@ -46,7 +51,7 @@
       </div>
 
       <div class="upload-bar">
-        <input type="text" id="guest-name" placeholder="Your name (optional)" maxlength="30">
+        <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
         <button class="btn" id="upload-btn" type="button">Add photos</button>
         <input type="file" id="file-input" accept="image/*" multiple hidden>
       </div>

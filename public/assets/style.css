@@ -663,7 +663,9 @@ a { color: inherit; }
   background: #fff;
   color: var(--ink);
   outline: none;
-  width: 170px;
+  flex: 1 1 150px;
+  min-width: 0;
+  max-width: 220px;
 }
 
 .upload-bar input[type="text"]:focus { border-color: var(--accent); }
@@ -771,6 +773,18 @@ a { color: inherit; }
 .lightbox-actions button:hover { background: rgba(255, 255, 255, 0.24); }
 
 /* host bar + limit notice */
+
+.header-actions { margin-top: 16px; }
+
+.badge-pill {
+  display: inline-block;
+  background: var(--sage);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
 
 .host-bar {
   background: var(--ink);

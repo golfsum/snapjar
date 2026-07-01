@@ -89,12 +89,11 @@ function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
   document.getElementById("upgrade-link").href = upgradeUrl();
 
-  if (isHost && STRIPE_PAYMENT_LINK && !eventData.paid) {
-    document.getElementById("host-upgrade").style.display = "inline";
-    document.getElementById("host-upgrade-link").href = upgradeUrl();
-  } else {
-    document.getElementById("host-upgrade").style.display = "none";
-  }
+  // Hosts always see where the upgrade lives, not just when the album is full
+  const showUpgrade = isHost && !eventData.paid;
+  document.getElementById("host-actions").style.display = showUpgrade ? "block" : "none";
+  document.getElementById("header-upgrade").href = upgradeUrl();
+  document.getElementById("paid-badge").style.display = isHost && eventData.paid ? "block" : "none";
 }
 
 // ---------- live gallery ----------
