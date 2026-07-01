@@ -11,6 +11,10 @@ import {
 
 const FREE_PHOTO_LIMIT = 25;
 
+// Paste your Stripe Payment Link here (looks like https://buy.stripe.com/xxxx).
+// Leave empty and upgrade links fall back to the pricing section.
+const STRIPE_PAYMENT_LINK = "";
+
 const code = new URLSearchParams(location.search).get("c");
 
 const loadingState = document.getElementById("loading-state");
@@ -74,8 +78,23 @@ function atFreeLimit() {
   return !eventData.paid && (eventData.photoCount || 0) >= FREE_PHOTO_LIMIT;
 }
 
+// The album code rides along as client_reference_id, so every Stripe payment
+// tells you exactly which album to flip to paid. No guessing, no typos.
+function upgradeUrl() {
+  if (!STRIPE_PAYMENT_LINK) return "index.html#pricing";
+  return `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(code)}`;
+}
+
 function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
+  document.getElementById("upgrade-link").href = upgradeUrl();
+
+  if (isHost && STRIPE_PAYMENT_LINK && !eventData.paid) {
+    document.getElementById("host-upgrade").style.display = "inline";
+    document.getElementById("host-upgrade-link").href = upgradeUrl();
+  } else {
+    document.getElementById("host-upgrade").style.display = "none";
+  }
 }
 
 // ---------- live gallery ----------

@@ -22,7 +22,9 @@ function randomCode() {
 }
 
 function albumUrl(code) {
-  return `${location.origin}${location.pathname.replace(/create\.html$/, "")}event.html?c=${code}`;
+  // Absolute path on purpose. Hosts like Vercel rewrite /create.html to
+  // /create, and building relative to pathname breaks the QR link.
+  return `${location.origin}/event.html?c=${code}`;
 }
 
 function showError(msg) {

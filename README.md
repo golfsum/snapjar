@@ -45,9 +45,9 @@ No build step. No npm install. It's static files plus Firebase, which means noth
 No payment code needed for launch:
 
 1. Create a **Stripe Payment Link** for $19, name it "Snapjar Party upgrade"
-2. In the payment link settings, add a custom field: "Your album code"
-3. Put that link behind the upgrade buttons (search for `index.html#pricing` in `event.html` and the pricing buttons in `index.html`, swap in the Stripe URL)
-4. When a payment lands, open Firestore in the console, find `events/{their code}`, set `paid` to `true`. Takes ten seconds.
+2. Paste the buy.stripe.com URL into `STRIPE_PAYMENT_LINK` at the top of `public/assets/event.js`. That's the only place it lives.
+3. Every upgrade link automatically appends the album code as `client_reference_id`, so each payment in your Stripe dashboard shows exactly which album bought it
+4. When a payment lands, open Firestore in the console, find `events/{that code}`, set `paid` to `true`. Takes ten seconds.
 
 Manually flipping a flag feels scrappy because it is. It's also the correct amount of engineering for week one. Automate it with a Stripe webhook + Cloud Function once you're doing a few sales a day.
 

@@ -166,6 +166,8 @@ a { color: inherit; }
   width: 100%;
   height: 190px;
   border-radius: 3px;
+  display: block;
+  object-fit: cover;
 }
 
 .polaroid span {
@@ -461,6 +463,14 @@ a { color: inherit; }
   font-weight: 700;
   color: var(--ink);
 }
+
+.photo-credits {
+  flex-basis: 100%;
+  font-size: 0.76rem;
+  opacity: 0.75;
+}
+
+.photo-credits a { color: inherit; }
 
 /* ==================================================
    app pages (create + event)
