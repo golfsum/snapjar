@@ -10,14 +10,15 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-
 
 // TODO: replace with your project's config before deploying
 const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyCozt3hTO1he8N1CeC01_ciRQGWbSxG9SM",
+  authDomain: "snapjar-d8489.firebaseapp.com",
+  projectId: "snapjar-d8489",
+  storageBucket: "snapjar-d8489.firebasestorage.app",
+  messagingSenderId: "797013092915",
+  appId: "1:797013092915:web:0118a4c75f3c2bcaea9146",
+  measurementId: "G-WSPXVLKVL9"
 };
-
+ 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
