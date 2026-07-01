@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Album · Snapjar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">snapjar<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <a href="create.html" class="btn btn-small">Start your own</a>
+    </div>
+  </nav>
+
+  <main class="event-main">
+
+    <div id="loading-state" class="page-state">Opening the album...</div>
+
+    <div id="missing-state" class="page-state" style="display:none">
+      <h1 style="font-size:1.6rem;margin-bottom:10px">Hmm, we can't find that album</h1>
+      <p>Double check the link, or ask the host to send it again.</p>
+    </div>
+
+    <div id="album-view" style="display:none">
+
+      <header class="event-header">
+        <p class="eyebrow">You're invited to add photos</p>
+        <h1 id="event-title"></h1>
+        <p class="event-meta" id="event-meta"></p>
+      </header>
+
+      <div class="host-bar" id="host-bar" style="display:none">
+        You're the host. Tap any photo to open it, then delete it if someone got silly.
+      </div>
+
+      <div class="limit-note" id="limit-note" style="display:none">
+        This free album is full (25 photos). The host can unlock unlimited photos for $19.
+        <a href="index.html#pricing" id="upgrade-link">See how</a>
+      </div>
+
+      <div class="upload-bar">
+        <input type="text" id="guest-name" placeholder="Your name (optional)" maxlength="30">
+        <button class="btn" id="upload-btn" type="button">Add photos</button>
+        <input type="file" id="file-input" accept="image/*" multiple hidden>
+      </div>
+
+      <p class="upload-status" id="upload-status"></p>
+
+      <div class="empty-gallery" id="empty-gallery" style="display:none">
+        <div class="big">&#128247;</div>
+        <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
+      </div>
+
+      <div class="gallery" id="gallery"></div>
+
+    </div>
+  </main>
+
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-actions">
+      <a id="lb-download" href="#" download target="_blank" rel="noopener">Save</a>
+      <button id="lb-delete" type="button" style="display:none">Delete</button>
+      <button id="lb-close" type="button">Close</button>
+    </div>
+    <img id="lb-img" alt="Event photo">
+  </div>
+
+  <script type="module" src="assets/event.js"></script>
+</body>
+</html>

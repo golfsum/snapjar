@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create your album · Snapjar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">snapjar<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <a href="index.html#pricing">Pricing</a>
+    </div>
+  </nav>
+
+  <main class="app-main">
+
+    <!-- step 1: the form -->
+    <div id="form-view">
+      <h1>Name your event</h1>
+      <p class="app-sub">That's genuinely all we need. You'll have a QR code in a second.</p>
+
+      <div class="card">
+        <form id="create-form">
+          <div class="field">
+            <label for="event-name">Event name</label>
+            <input id="event-name" type="text" maxlength="60" placeholder="Sam &amp; Riley's Wedding" required autocomplete="off">
+            <p class="hint">This is what guests see at the top of the album.</p>
+          </div>
+          <div class="field">
+            <label for="host-name">Your name <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></label>
+            <input id="host-name" type="text" maxlength="40" placeholder="Sam" autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-big" id="create-btn" style="width:100%">Create album</button>
+          <p class="form-error" id="create-error"></p>
+        </form>
+      </div>
+
+      <div class="past-events" id="past-events" style="display:none">
+        <h2>Your albums on this device</h2>
+        <div id="past-events-list"></div>
+      </div>
+    </div>
+
+    <!-- step 2: success -->
+    <div id="success-view" style="display:none">
+      <div class="success-panel">
+        <h2 id="success-title">Your album is live</h2>
+        <p class="app-sub">Print this code or share the link. Anyone who has it can add photos.</p>
+
+        <div class="qr-wrap print-card">
+          <img id="qr-img" alt="QR code for your album">
+          <div class="qr-caption" id="qr-caption"></div>
+          <div style="font-size:0.8rem;color:var(--ink-soft)">Scan to add your photos</div>
+        </div>
+
+        <div class="share-row">
+          <input id="share-link" type="text" readonly>
+          <button class="btn btn-small" id="copy-btn" type="button">Copy</button>
+        </div>
+
+        <div class="success-actions">
+          <a class="btn" id="open-album-btn" href="#">Open your album</a>
+          <button class="btn btn-outline" type="button" onclick="window.print()">Print table card</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module" src="assets/create.js"></script>
+</body>
+</html>
