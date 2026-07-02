@@ -9,11 +9,10 @@ import {
   ref, uploadBytes, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const FREE_PHOTO_LIMIT = 25;
+import { upgradeUrlFor } from "./config.js";
+import { track } from "./firebase-init.js";
 
-// Paste your Stripe Payment Link here (looks like https://buy.stripe.com/xxxx).
-// Leave empty and upgrade links fall back to the pricing section.
-const STRIPE_PAYMENT_LINK = "";
+const FREE_PHOTO_LIMIT = 25;
 
 const code = new URLSearchParams(location.search).get("c");
 
@@ -78,21 +77,14 @@ function atFreeLimit() {
   return !eventData.paid && (eventData.photoCount || 0) >= FREE_PHOTO_LIMIT;
 }
 
-// The album code rides along as client_reference_id, so every Stripe payment
-// tells you exactly which album to flip to paid. No guessing, no typos.
-function upgradeUrl() {
-  if (!STRIPE_PAYMENT_LINK) return "index.html#pricing";
-  return `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(code)}`;
-}
-
 function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
-  document.getElementById("upgrade-link").href = upgradeUrl();
+  document.getElementById("upgrade-link").href = upgradeUrlFor(code);
 
   // Hosts always see where the upgrade lives, not just when the album is full
   const showUpgrade = isHost && !eventData.paid;
   document.getElementById("host-actions").style.display = showUpgrade ? "block" : "none";
-  document.getElementById("header-upgrade").href = upgradeUrl();
+  document.getElementById("header-upgrade").href = upgradeUrlFor(code);
   document.getElementById("paid-badge").style.display = isHost && eventData.paid ? "block" : "none";
 }
 
@@ -178,6 +170,8 @@ fileInput.addEventListener("change", async () => {
     }
   }
 
+  if (done) track("photos_added", { album: code, count: done });
+
   uploadStatus.textContent = done
     ? (done === 1 ? "Added! It's in the album." : `Added ${done} photos!`)
     : "Those didn't go through. Check your connection and try again.";
@@ -262,6 +256,12 @@ lightbox.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeLightbox();
 });
+
+for (const id of ["header-upgrade", "upgrade-link"]) {
+  document.getElementById(id).addEventListener("click", () => {
+    track("upgrade_click", { album: code, from: id });
+  });
+}
 
 lbDelete.addEventListener("click", async () => {
   if (!lightboxPhotoId) return;

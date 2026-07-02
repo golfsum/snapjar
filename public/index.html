@@ -3,14 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snapjar. Every photo from your party, in one place.</title>
-  <meta name="description" content="Put a QR code on the tables. Guests scan it and every photo they take lands in one shared album. No app to download, works on any phone.">
+  <title>Snapjar | QR Code Photo Sharing for Weddings and Parties</title>
+  <meta name="description" content="Put a QR code on the tables and get every photo your guests take, in one shared album. No app to download, no accounts for guests, works on any phone. Free to start, $19 for unlimited photos.">
+  <link rel="canonical" href="https://getsnapjar.com/">
+  <meta name="theme-color" content="#faf6ef">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://getsnapjar.com/">
+  <meta property="og:site_name" content="Snapjar">
   <meta property="og:title" content="Snapjar. Every photo from your party, in one place.">
-  <meta property="og:description" content="Guests scan a QR code and their photos land in one shared album. No app needed.">
+  <meta property="og:description" content="Guests scan a QR code and every photo they take lands in one shared album. No app, no accounts, works on any phone.">
+  <meta property="og:image" content="https://getsnapjar.com/assets/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Snapjar. Every photo from your party, in one place.">
+  <meta name="twitter:description" content="Guests scan a QR code and every photo they take lands in one shared album. No app, no accounts.">
+  <meta name="twitter:image" content="https://getsnapjar.com/assets/img/og.jpg">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Snapjar",
+    "description": "QR code photo sharing for weddings and parties. Guests scan a code and every photo lands in one shared album. No app to download.",
+    "brand": { "@type": "Brand", "name": "Snapjar" },
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+      { "@type": "Offer", "name": "Party", "price": "19", "priceCurrency": "USD", "description": "One time, per event. Unlimited photos and guests, gallery stays up 1 year." }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Do my guests need to download an app?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. The QR code opens a web page and they upload straight from there. It works on iPhone and Android." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can strangers see our photos?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Only people with your album's link or QR code can see it. Album codes are random, so nobody stumbles into your photos." }
+      },
+      {
+        "@type": "Question",
+        "name": "What if someone uploads something dumb?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You're the host, you can delete any photo from your album." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do photos get compressed like in group chats?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. We keep photos at high quality, way above what messaging apps do to them." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use it for something that isn't a wedding?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Birthdays, graduations, reunions, baby showers, office parties. If people are taking photos, it works." }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -142,9 +201,17 @@
     <a href="create.html" class="btn btn-big">Create your free album</a>
   </section>
 
+  <script type="module" src="assets/firebase-init.js"></script>
+
   <footer class="footer">
     <span>snapjar<span class="logo-dot">.</span></span>
     <span>Made by one person who was tired of never getting the photos back.</span>
+    <span class="footer-links">
+      <a href="wedding.html">Weddings</a>
+      <a href="birthday.html">Birthdays</a>
+      <a href="baby-shower.html">Baby showers</a>
+      <a href="guestpix-alternative.html">Guestpix alternative</a>
+    </span>
     <span class="photo-credits">Photos by <a href="https://www.flickr.com/photos/131772798@N06/16609700990" target="_blank" rel="noopener">geoff.eagle</a>, <a href="https://www.flickr.com/photos/23146606@N05/9639081710" target="_blank" rel="noopener">amywardlaw</a> and <a href="https://www.flickr.com/photos/91116791@N00/4785775944" target="_blank" rel="noopener">srizki</a> on Flickr, CC BY</span>
   </footer>
 

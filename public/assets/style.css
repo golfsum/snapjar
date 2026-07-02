@@ -561,6 +561,13 @@ a { color: inherit; }
   margin-top: 12px;
 }
 
+.qr-domain {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
 .share-row {
   display: flex;
   gap: 10px;
@@ -584,6 +591,20 @@ a { color: inherit; }
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+.success-upsell {
+  margin-top: 28px;
+  padding: 20px 22px;
+  background: #fdf0e7;
+  border: 1px solid #efc9ae;
+  border-radius: var(--radius);
+}
+
+.success-upsell p {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
 }
 
 /* past events */
@@ -815,6 +836,138 @@ a { color: inherit; }
   padding: 90px 20px;
   color: var(--ink-soft);
 }
+
+/* admin dashboard */
+
+.admin-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vh, 50px) 20px 80px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin: 24px 0 32px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.admin-table-wrap {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.admin-table tr:last-child td { border-bottom: none; }
+
+.admin-table a { font-weight: 600; text-decoration: none; }
+.admin-table a:hover { color: var(--accent); }
+
+.cell-sub { font-size: 0.78rem; color: var(--ink-soft); }
+.cell-mono { font-family: monospace; letter-spacing: 0.06em; }
+.cell-actions { white-space: nowrap; text-align: right; }
+
+.tag {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.tag-paid { background: var(--sage); color: #fff; }
+.tag-free { background: var(--paper-deep); color: var(--ink-soft); }
+
+.mini-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.mini-btn:hover { border-color: var(--ink); }
+.mini-btn:disabled { opacity: 0.5; cursor: wait; }
+
+.mini-danger:hover { border-color: var(--accent-deep); color: var(--accent-deep); }
+
+.admin-note {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-top: 18px;
+}
+
+/* content pages (wedding, birthday, etc) */
+
+.page-hero {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+  padding: clamp(40px, 8vh, 80px) 20px 24px;
+}
+
+.page-hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 18px;
+}
+
+.page-hero p {
+  color: var(--ink-soft);
+  font-size: 1.12rem;
+}
+
+.page-hero .btn { margin-top: 26px; }
+
+.footer-links { display: flex; gap: 14px; flex-wrap: wrap; }
+.footer-links a { color: inherit; }
 
 /* print: only the QR card */
 

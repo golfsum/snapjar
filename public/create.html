@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create your album · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -57,6 +59,7 @@
           <img id="qr-img" alt="QR code for your album">
           <div class="qr-caption" id="qr-caption"></div>
           <div style="font-size:0.8rem;color:var(--ink-soft)">Scan to add your photos</div>
+          <div class="qr-domain" id="qr-domain"></div>
         </div>
 
         <div class="share-row">
@@ -67,6 +70,11 @@
         <div class="success-actions">
           <a class="btn" id="open-album-btn" href="#">Open your album</a>
           <button class="btn btn-outline" type="button" onclick="window.print()">Print table card</button>
+        </div>
+
+        <div class="success-upsell">
+          <p>Free albums hold 25 photos. A good party blows past that in an hour.</p>
+          <a class="btn btn-small" id="success-upgrade" href="#" target="_blank" rel="noopener">Make it unlimited, $19 one time</a>
         </div>
       </div>
     </div>

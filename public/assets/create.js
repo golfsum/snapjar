@@ -1,6 +1,7 @@
 // Album creation flow.
 
-import { db, ensureSignedIn } from "./firebase-init.js";
+import { db, ensureSignedIn, track } from "./firebase-init.js";
+import { upgradeUrlFor } from "./config.js";
 import {
   doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -70,6 +71,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     rememberAlbum(code, eventName);
+    track("album_created", { album: code });
     showSuccess(code, eventName);
   } catch (err) {
     console.error(err);
@@ -91,6 +93,13 @@ function showSuccess(code, eventName) {
 
   const qr = document.getElementById("qr-img");
   qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" + encodeURIComponent(url);
+
+  // Every printed table card quietly advertises the product
+  document.getElementById("qr-domain").textContent = location.host;
+
+  const upsell = document.getElementById("success-upgrade");
+  upsell.href = upgradeUrlFor(code);
+  upsell.addEventListener("click", () => track("upgrade_click", { album: code, from: "success-screen" }));
 
   window.scrollTo({ top: 0 });
 }

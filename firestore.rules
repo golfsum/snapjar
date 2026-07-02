@@ -3,30 +3,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // You, signed in with Google on the admin page.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'nd82soft@gmail.com';
+    }
+
     match /events/{code} {
-      // Anyone with the album code can view it. Codes are random,
-      // so this is link-based privacy, same model as a Google Docs share link.
-      allow read: if true;
+      // Anyone with the album code can open it. Codes are random, so this is
+      // link-based privacy. Nobody except the admin can LIST albums, which is
+      // what keeps strangers from enumerating everyone's events.
+      allow get: if true;
+      allow list: if isAdmin();
 
       // Only signed-in (anonymous counts) users can create, and the event
-      // must belong to them and start unpaid. Nobody grants themselves Party.
+      // must belong to them and start unpaid.
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid
         && request.resource.data.paid == false
         && request.resource.data.photoCount == 0;
 
-      // Guests may only bump the photo counter. The host can edit their event
-      // but can never flip their own paid flag. You flip that from the
-      // Firebase console after Stripe pays you.
-      allow update: if request.auth != null && (
+      // Guests may only bump the photo counter. Hosts can edit their event
+      // but never their own paid flag. The admin can change anything,
+      // which is how the dashboard marks albums paid after Stripe pays out.
+      allow update: if isAdmin() || (request.auth != null && (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoCount'])
         || (
           resource.data.hostUid == request.auth.uid
           && request.resource.data.paid == resource.data.paid
         )
-      );
+      ));
 
-      allow delete: if false;
+      allow delete: if isAdmin();
 
       match /photos/{photoId} {
         allow read: if true;
@@ -38,10 +46,10 @@ service cloud.firestore {
         allow update: if false;
 
         // The uploader can remove their own photo. The host can remove any.
-        allow delete: if request.auth != null && (
+        allow delete: if isAdmin() || (request.auth != null && (
           resource.data.uploaderUid == request.auth.uid
           || get(/databases/$(database)/documents/events/$(code)).data.hostUid == request.auth.uid
-        );
+        ));
       }
     }
   }

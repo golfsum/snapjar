@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">snapjar<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <button class="btn btn-small btn-outline" id="signout-btn" style="display:none">Sign out</button>
+    </div>
+  </nav>
+
+  <main class="admin-main">
+
+    <!-- gate -->
+    <div id="gate-view" class="page-state">
+      <h1 style="font-size:1.6rem;margin-bottom:10px">Admin dashboard</h1>
+      <p style="margin-bottom:24px">Sign in with the admin Google account to continue.</p>
+      <button class="btn" id="signin-btn" type="button">Sign in with Google</button>
+      <p class="form-error" id="gate-error"></p>
+    </div>
+
+    <div id="loading-view" class="page-state" style="display:none">Loading albums...</div>
+
+    <!-- dashboard -->
+    <div id="dash-view" style="display:none">
+      <h1 style="font-size:1.8rem;margin-bottom:6px">Dashboard</h1>
+      <p class="app-sub" id="dash-updated"></p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-albums">0</div><div class="stat-label">Albums</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Photos</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-paid">0</div><div class="stat-label">Paid albums</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-revenue">$0</div><div class="stat-label">Revenue</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-week">0</div><div class="stat-label">Albums this week</div></div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Album</th>
+              <th>Code</th>
+              <th>Photos</th>
+              <th>Created</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="album-rows"></tbody>
+        </table>
+      </div>
+
+      <p class="admin-note">Marking an album paid is what you do after a Stripe payment lands. The payment's client_reference_id is the album code. Deleting removes the album document; guests lose access immediately.</p>
+    </div>
+
+  </main>
+
+  <script type="module" src="assets/admin.js"></script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getAnalytics, logEvent, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
 // TODO: replace with your project's config before deploying
 const firebaseConfig = {
@@ -24,6 +25,16 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Page views and traffic sources show up in Firebase Analytics / GA4.
+// Guarded so it never breaks browsers that block analytics.
+let analytics = null;
+isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); }).catch(() => {});
+
+// Fire-and-forget event logging. Never throws, never blocks the UI.
+export function track(name, params) {
+  try { if (analytics) logEvent(analytics, name, params || {}); } catch { /* ignore */ }
+}
 
 // Everyone signs in anonymously behind the scenes. Guests never see a login.
 // Resolves with the user once auth is ready.
