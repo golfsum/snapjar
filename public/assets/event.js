@@ -154,6 +154,9 @@ function renderGallery() {
     const wrap = document.createElement("div");
     wrap.className = "gallery-group";
 
+    const header = document.createElement("div");
+    header.className = "group-header";
+
     const label = document.createElement("h3");
     label.className = "group-label";
     label.textContent = g.key || "No name given";
@@ -161,6 +164,15 @@ function renderGallery() {
     count.className = "count";
     count.textContent = ` · ${g.photos.length} photo${g.photos.length === 1 ? "" : "s"}`;
     label.appendChild(count);
+
+    const groupDl = document.createElement("button");
+    groupDl.className = "mini-btn group-dl";
+    groupDl.type = "button";
+    groupDl.textContent = "Download";
+    groupDl.addEventListener("click", () =>
+      downloadMany(g.photos, `${safeName(g.key || "no-name")}-photos.zip`));
+
+    header.append(label, groupDl);
 
     const grid = document.createElement("div");
     grid.className = "gallery";
@@ -188,11 +200,12 @@ function renderGallery() {
       grid.appendChild(item);
     }
 
-    wrap.append(label, grid);
+    wrap.append(header, grid);
     gallery.appendChild(wrap);
   }
 
   gallery.classList.toggle("selecting", selectMode);
+  document.getElementById("gallery-toolbar").style.display = photoCache.size ? "flex" : "none";
   refreshSelectUi();
 }
 
@@ -227,6 +240,7 @@ function refreshSelectUi() {
   document.getElementById("select-count").textContent =
     `${selected.size} selected`;
   document.getElementById("select-delete").disabled = !selected.size;
+  document.getElementById("select-download").disabled = !selected.size;
 }
 
 function setSelectMode(on) {
@@ -267,6 +281,126 @@ document.getElementById("select-delete").addEventListener("click", async () => {
   setSelectMode(false);
 });
 
+document.getElementById("select-download").addEventListener("click", () => {
+  const entries = [...selected].map((id) => [id, photoCache.get(id)]);
+  downloadMany(entries, `snapjar-${safeName(eventData.name)}-selected.zip`);
+});
+
+// ---------- downloads ----------
+
+function setStatus(msg) {
+  uploadStatus.classList.remove("upload-error");
+  uploadStatus.textContent = msg;
+}
+
+function safeName(s) {
+  return (s || "guest").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "guest";
+}
+
+async function fetchAsBlob(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("http " + res.status);
+  return res.blob();
+}
+
+function saveBlob(blob, filename) {
+  const objUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(objUrl), 3000);
+}
+
+async function downloadOne(id) {
+  const data = photoCache.get(id);
+  if (!data) return false;
+  try {
+    const blob = await fetchAsBlob(data.url);
+    saveBlob(blob, `${safeName(data.uploaderName)}.jpg`);
+    return true;
+  } catch (err) {
+    console.error("download failed, opening in a tab instead", err);
+    window.open(data.url, "_blank", "noopener");
+    return false;
+  }
+}
+
+// JSZip is only pulled in when someone actually downloads a batch.
+let jsZipPromise = null;
+function getJSZip() {
+  if (!jsZipPromise) {
+    jsZipPromise = import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm")
+      .then((m) => m.default || m);
+  }
+  return jsZipPromise;
+}
+
+async function downloadMany(entries, zipName) {
+  entries = entries.filter((e) => e && e[1]);
+  if (!entries.length) return;
+
+  if (entries.length === 1) {
+    setStatus("Downloading photo...");
+    await downloadOne(entries[0][0]);
+    setStatus("");
+    return;
+  }
+
+  setStatus("Getting the photos ready...");
+  let JSZip;
+  try {
+    JSZip = await getJSZip();
+  } catch (err) {
+    console.error("zip library failed to load", err);
+    setStatus("Couldn't zip them. Downloading one at a time instead...");
+    for (const [id] of entries) await downloadOne(id);
+    setStatus("");
+    return;
+  }
+
+  const zip = new JSZip();
+  const used = {};
+  let ok = 0;
+  for (const [i, [, data]] of entries.entries()) {
+    setStatus(`Getting photo ${i + 1} of ${entries.length}...`);
+    try {
+      const blob = await fetchAsBlob(data.url);
+      const base = safeName(data.uploaderName);
+      used[base] = (used[base] || 0) + 1;
+      zip.file(`${base}-${used[base]}.jpg`, blob);
+      ok++;
+    } catch (err) {
+      console.error("skipping a photo in the zip", err);
+    }
+  }
+
+  if (!ok) {
+    uploadStatus.classList.add("upload-error");
+    uploadStatus.textContent = "Those wouldn't download. Check your connection and try again.";
+    return;
+  }
+
+  setStatus("Zipping it all up...");
+  const blob = await zip.generateAsync({ type: "blob" });
+  saveBlob(blob, zipName);
+  track("download_zip", { album: code, count: ok });
+  setStatus(ok === entries.length ? "Downloaded!" : `Downloaded ${ok} of ${entries.length}.`);
+  setTimeout(() => setStatus(""), 4000);
+}
+
+// "Download everything" is the Party perk the pricing page promises.
+document.getElementById("download-all-btn").addEventListener("click", () => {
+  if (!eventData.paid) {
+    openLimitModal("download");
+    return;
+  }
+  downloadMany([...photoCache], `snapjar-${safeName(eventData.name)}.zip`);
+  track("download_all", { album: code, count: photoCache.size });
+});
+
 // Hosts see who's been contributing, built from the names on the photos.
 function refreshGuestList() {
   const names = new Set();
@@ -297,19 +431,28 @@ uploadBtn.addEventListener("click", () => {
 // (and a chance to be the hero).
 const limitModal = document.getElementById("limit-modal");
 
-function openLimitModal() {
-  document.getElementById("limit-title").textContent =
-    isHost ? "Your album is full" : "This album is full";
-  document.getElementById("limit-copy").textContent = isHost
-    ? "Free albums hold 25 photos and yours just hit the ceiling. Unlock unlimited photos and a full year of gallery time for $19, one time."
-    : "Free albums hold 25 photos and this one is maxed out. The host can unlock unlimited photos for $19, or you can be the hero and do it for them.";
+function openLimitModal(reason) {
+  const title = document.getElementById("limit-title");
+  const copy = document.getElementById("limit-copy");
+
+  if (reason === "download") {
+    title.textContent = "Download all is a Party perk";
+    copy.textContent = isHost
+      ? "Grab every photo in one zip when you unlock this album for $19, one time. You can still download photos one by one for free."
+      : "Downloading the whole album at once is a Party perk. The host can unlock it for $19, or you can. Single photos are always free to save.";
+  } else {
+    title.textContent = isHost ? "Your album is full" : "This album is full";
+    copy.textContent = isHost
+      ? "Free albums hold 25 photos and yours just hit the ceiling. Unlock unlimited photos and a full year of gallery time for $19, one time."
+      : "Free albums hold 25 photos and this one is maxed out. The host can unlock unlimited photos for $19, or you can be the hero and do it for them.";
+  }
 
   const up = document.getElementById("limit-upgrade");
   up.href = upgradeUrlFor(code);
   up.textContent = isHost ? "Unlock unlimited, $19" : "Unlock it, $19";
 
   limitModal.classList.add("open");
-  track("paywall_shown", { album: code, role: isHost ? "host" : "guest" });
+  track("paywall_shown", { album: code, role: isHost ? "host" : "guest", reason: reason || "full" });
 }
 
 document.getElementById("limit-close").addEventListener("click", () => limitModal.classList.remove("open"));

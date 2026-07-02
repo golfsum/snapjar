@@ -63,7 +63,6 @@
         <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
         <button class="btn" id="upload-btn" type="button">Add photos</button>
         <button class="btn btn-outline" id="share-btn" type="button">Share</button>
-        <button class="btn btn-outline" id="select-btn" type="button" style="display:none">Select</button>
         <input type="file" id="file-input" accept="image/*" multiple hidden>
       </div>
 
@@ -74,6 +73,11 @@
         <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
       </div>
 
+      <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
+        <button class="mini-btn" id="download-all-btn" type="button">Download all</button>
+        <button class="mini-btn" id="select-btn" type="button" style="display:none">Select</button>
+      </div>
+
       <div id="gallery"></div>
 
     </div>
@@ -82,6 +86,7 @@
   <div class="select-bar" id="select-bar">
     <span id="select-count">0 selected</span>
     <div class="select-bar-actions">
+      <button class="btn btn-small btn-outline" id="select-download" type="button" disabled>Download</button>
       <button class="btn btn-small select-delete" id="select-delete" type="button" disabled>Delete</button>
       <button class="btn btn-small btn-outline" id="select-cancel" type="button">Cancel</button>
     </div>

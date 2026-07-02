@@ -820,13 +820,30 @@ a { color: inherit; }
 
 .gallery-group { margin-bottom: 30px; }
 
+.gallery-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gallery-toolbar .mini-btn { margin-left: 0; }
+
+.group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
 .group-label {
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 600;
-  margin: 0 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--line);
+  margin: 0;
 }
 
 .group-label .count {
@@ -834,6 +851,12 @@ a { color: inherit; }
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--ink-soft);
+}
+
+.group-dl {
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 0;
 }
 
 .gallery {
@@ -923,6 +946,17 @@ a { color: inherit; }
 }
 
 .select-bar.show { bottom: 18px; }
+
+@media (max-width: 480px) {
+  .select-bar {
+    gap: 10px;
+    padding: 8px 8px 8px 14px;
+    font-size: 0.85rem;
+    max-width: calc(100vw - 20px);
+  }
+  .select-bar .btn-small { padding: 8px 12px; }
+  .select-bar-actions { gap: 6px; }
+}
 
 .select-bar-actions { display: flex; gap: 8px; }
 

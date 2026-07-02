@@ -38,7 +38,12 @@ No build step. No npm install. It's static files plus Firebase, which means noth
    firebase deploy
    ```
 7. Point your domain at it: Hosting > Add custom domain
-8. Create one album yourself, upload 15 good photos, and use it as your live demo link everywhere
+8. **Enable photo downloads (one-time CORS setup).** The browser can render Storage images but can't read their bytes to build a zip until the bucket allows it. Run this once (gcloud CLI, or use Cloud Shell in the console so nothing installs locally):
+   ```
+   gcloud storage buckets update gs://snapjar-d8489.firebasestorage.app --cors-file=cors.json
+   ```
+   Older setups: `gsutil cors set cors.json gs://snapjar-d8489.firebasestorage.app`. The allowed origins live in `cors.json`; add any new domain there. Until this runs, single-photo downloads open in a new tab and "Download all" / per-person zips will report they couldn't download.
+9. Create one album yourself, upload 15 good photos, and use it as your live demo link everywhere
 
 ## How the money works this week
 

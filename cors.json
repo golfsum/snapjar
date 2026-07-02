@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "https://getsnapjar.com",
+      "https://www.getsnapjar.com",
+      "http://localhost:4173",
+      "http://localhost:5000"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Content-Disposition"]
+  }
+]
