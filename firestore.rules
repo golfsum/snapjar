@@ -3,10 +3,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // You, signed in with Google on the admin page.
+    // You, signed in with Google on the admin page. The email_verified check
+    // matters: without it, anyone could register an unverified email/password
+    // account claiming this address and walk right in.
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'nd82soft@gmail.com';
+        && request.auth.token.email == 'nd82soft@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
     match /events/{code} {
@@ -23,14 +26,22 @@ service cloud.firestore {
         && request.resource.data.paid == false
         && request.resource.data.photoCount == 0;
 
-      // Guests may only bump the photo counter. Hosts can edit their event
-      // but never their own paid flag. The admin can change anything,
+      // Guests may only move the photo counter one step at a time, so nobody
+      // can reset it to zero and dodge the free limit. Hosts can edit their
+      // event but never their own paid flag. The admin can change anything,
       // which is how the dashboard marks albums paid after Stripe pays out.
       allow update: if isAdmin() || (request.auth != null && (
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoCount'])
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoCount'])
+          && (
+            request.resource.data.photoCount == resource.data.photoCount + 1
+            || request.resource.data.photoCount == resource.data.photoCount - 1
+          )
+        )
         || (
           resource.data.hostUid == request.auth.uid
           && request.resource.data.paid == resource.data.paid
+          && request.resource.data.photoCount == resource.data.photoCount
         )
       ));
 
@@ -40,8 +51,15 @@ service cloud.firestore {
         allow read: if true;
 
         // Any signed-in guest can add a photo, tagged with their own uid.
+        // The free limit is enforced HERE, not just in the browser: unpaid
+        // albums stop accepting photos at 25 even if someone calls the
+        // Firestore API directly with devtools.
         allow create: if request.auth != null
-          && request.resource.data.uploaderUid == request.auth.uid;
+          && request.resource.data.uploaderUid == request.auth.uid
+          && (
+            get(/databases/$(database)/documents/events/$(code)).data.paid == true
+            || get(/databases/$(database)/documents/events/$(code)).data.photoCount < 25
+          );
 
         allow update: if false;
 

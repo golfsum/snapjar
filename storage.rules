@@ -5,14 +5,23 @@ service firebase.storage {
     match /events/{code}/{fileName} {
       allow read: if true;
 
-      // Signed-in guests only, images only, 10 MB cap.
-      // The client compresses to ~300 KB anyway, this is just the backstop.
+      // Signed-in guests only, images only, 10 MB cap, and the album has to
+      // actually exist in Firestore. The client compresses to ~300 KB anyway,
+      // this is the backstop.
       allow create: if request.auth != null
         && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches('image/.*')
+        && firestore.exists(/databases/(default)/documents/events/$(code));
 
       allow update: if false;
-      allow delete: if request.auth != null;
+
+      // Only the admin deletes storage objects. When a host or guest removes
+      // a photo, the app deletes the Firestore record (which the gallery is
+      // built from) and quietly leaves the file; orphaned files cost nothing
+      // meaningful and nobody can reach them without the exact random path.
+      allow delete: if request.auth != null
+        && request.auth.token.email == 'nd82soft@gmail.com'
+        && request.auth.token.email_verified == true;
     }
   }
 }
