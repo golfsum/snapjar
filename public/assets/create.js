@@ -25,7 +25,7 @@ function randomCode() {
 function albumUrl(code) {
   // Absolute path on purpose. Hosts like Vercel rewrite /create.html to
   // /create, and building relative to pathname breaks the QR link.
-  return `${location.origin}/event.html?c=${code}`;
+  return `${location.origin}/event?c=${code}`;
 }
 
 function showError(msg) {
@@ -89,7 +89,7 @@ function showSuccess(code, eventName) {
 
   document.getElementById("qr-caption").textContent = eventName;
   document.getElementById("share-link").value = url;
-  document.getElementById("open-album-btn").href = `event.html?c=${code}`;
+  document.getElementById("open-album-btn").href = `/event?c=${code}`;
 
   const qr = document.getElementById("qr-img");
   qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" + encodeURIComponent(url);
@@ -128,7 +128,7 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
 
   for (const album of list) {
     const a = document.createElement("a");
-    a.href = `event.html?c=${album.code}`;
+    a.href = `/event?c=${album.code}`;
     const name = document.createElement("span");
     name.textContent = album.name;
     const chip = document.createElement("span");

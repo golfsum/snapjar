@@ -16,8 +16,11 @@ service cloud.firestore {
       // Anyone with the album code can open it. Codes are random, so this is
       // link-based privacy. Nobody except the admin can LIST albums, which is
       // what keeps strangers from enumerating everyone's events.
+      // Signed-in hosts can list THEIR OWN albums (the query must filter by
+      // their hostUid, Firestore enforces that). Only the admin lists all.
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin()
+        || (request.auth != null && resource.data.hostUid == request.auth.uid);
 
       // Only signed-in (anonymous counts) users can create, and the event
       // must belong to them and start unpaid.
@@ -45,7 +48,9 @@ service cloud.firestore {
         )
       ));
 
-      allow delete: if isAdmin();
+      // Hosts can delete their own albums, the admin can delete any.
+      allow delete: if isAdmin()
+        || (request.auth != null && resource.data.hostUid == request.auth.uid);
 
       match /photos/{photoId} {
         allow read: if true;

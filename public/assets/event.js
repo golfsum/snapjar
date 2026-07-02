@@ -58,6 +58,8 @@ async function init() {
 
     if (isHost) document.getElementById("host-bar").style.display = "block";
 
+    rememberVisit(code, eventData.name);
+
     loadingState.style.display = "none";
     albumView.style.display = "block";
 
@@ -73,6 +75,17 @@ function showMissing() {
   missingState.style.display = "block";
 }
 
+// Albums you open show up on the My Albums page, so guests and hosts on a
+// second device can always find their way back.
+function rememberVisit(albumCode, name) {
+  try {
+    const list = JSON.parse(localStorage.getItem("snapjar_visited") || "[]")
+      .filter((v) => v.code !== albumCode);
+    list.unshift({ code: albumCode, name, at: new Date().toISOString() });
+    localStorage.setItem("snapjar_visited", JSON.stringify(list.slice(0, 20)));
+  } catch { /* private browsing, fine */ }
+}
+
 function atFreeLimit() {
   return !eventData.paid && (eventData.photoCount || 0) >= FREE_PHOTO_LIMIT;
 }
@@ -81,11 +94,15 @@ function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
   document.getElementById("upgrade-link").href = upgradeUrlFor(code);
 
-  // Hosts always see where the upgrade lives, not just when the album is full
-  const showUpgrade = isHost && !eventData.paid;
-  document.getElementById("host-actions").style.display = showUpgrade ? "block" : "none";
+  // Hosts get the prominent upgrade button. Everyone else gets a quieter
+  // link, because the host's other device and generous friends both count.
+  document.getElementById("host-actions").style.display =
+    isHost && !eventData.paid ? "block" : "none";
+  document.getElementById("guest-upgrade").style.display =
+    !isHost && !eventData.paid ? "block" : "none";
   document.getElementById("header-upgrade").href = upgradeUrlFor(code);
-  document.getElementById("paid-badge").style.display = isHost && eventData.paid ? "block" : "none";
+  document.getElementById("guest-upgrade-link").href = upgradeUrlFor(code);
+  document.getElementById("paid-badge").style.display = eventData.paid ? "block" : "none";
 }
 
 // ---------- live gallery ----------
@@ -106,7 +123,23 @@ function watchPhotos() {
     // Keep the local count roughly in sync for the limit check
     eventData.photoCount = snap.size;
     refreshLimitUi();
+    if (isHost) refreshGuestList();
   });
+}
+
+// Hosts see who's been contributing, built from the names on the photos.
+function refreshGuestList() {
+  const names = new Set();
+  let anonymous = 0;
+  for (const data of photoCache.values()) {
+    if (data.uploaderName) names.add(data.uploaderName);
+    else anonymous++;
+  }
+  const el = document.getElementById("host-guests");
+  if (!names.size && !anonymous) { el.textContent = ""; return; }
+  const parts = [...names];
+  if (anonymous) parts.push(`${anonymous} unnamed`);
+  el.textContent = ` Photos from: ${parts.join(", ")}.`;
 }
 
 function addPhotoToGallery(id, data) {
@@ -257,7 +290,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeLightbox();
 });
 
-for (const id of ["header-upgrade", "upgrade-link"]) {
+for (const id of ["header-upgrade", "upgrade-link", "guest-upgrade-link"]) {
   document.getElementById(id).addEventListener("click", () => {
     track("upgrade_click", { album: code, from: id });
   });

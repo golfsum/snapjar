@@ -607,6 +607,119 @@ a { color: inherit; }
   margin-bottom: 12px;
 }
 
+/* settings page */
+
+.card-heading { font-size: 1.2rem; margin-bottom: 6px; }
+
+.card-sub { color: var(--ink-soft); font-size: 0.95rem; margin-bottom: 18px; }
+
+.settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.danger-card { margin-top: 18px; border-color: #efc9ae; }
+
+.danger-btn:hover { border-color: var(--accent-deep); color: var(--accent-deep); background: transparent; }
+
+/* legal pages */
+
+.legal-main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vh, 60px) 20px 80px;
+}
+
+.legal-main h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 6px; }
+
+.legal-date { color: var(--ink-soft); font-size: 0.88rem; margin-bottom: 26px; }
+
+.legal-tldr {
+  background: var(--paper-deep);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 0.97rem;
+  margin-bottom: 34px;
+}
+
+.legal-main h2 { font-size: 1.25rem; margin: 30px 0 10px; }
+
+.legal-main p, .legal-main li { color: var(--ink-soft); font-size: 0.97rem; }
+
+.legal-main ul { padding-left: 22px; margin: 10px 0; }
+
+.legal-main li { margin-bottom: 8px; }
+
+.legal-main a { color: var(--accent-deep); }
+
+.consent-line {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 14px;
+}
+
+.consent-line a { color: inherit; }
+
+/* my albums page */
+
+.albums-heading {
+  font-size: 1.1rem;
+  margin: 26px 0 12px;
+}
+
+.album-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+
+.album-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.album-card-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.album-card-name:hover { color: var(--accent); }
+
+.album-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.header-upgrade-link {
+  font-size: 0.88rem;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
 /* past events */
 
 .past-events { margin-top: 36px; }

@@ -9,6 +9,6 @@ export const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/8x2aEQfRgcP331bdEn2sM
 export const ADMIN_EMAIL = "nd82soft@gmail.com";
 
 export function upgradeUrlFor(code) {
-  if (!STRIPE_PAYMENT_LINK) return "index.html#pricing";
+  if (!STRIPE_PAYMENT_LINK) return "/#pricing";
   return `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(code)}`;
 }

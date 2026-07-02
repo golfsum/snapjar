@@ -93,7 +93,7 @@ function render() {
 
     const name = document.createElement("td");
     const link = document.createElement("a");
-    link.href = `event.html?c=${a.code}`;
+    link.href = `/event?c=${a.code}`;
     link.target = "_blank";
     link.rel = "noopener";
     link.textContent = a.name || "(unnamed)";

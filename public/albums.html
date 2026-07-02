@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My albums · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="logo" href="/">snapjar<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <a href="/settings">Settings</a>
+      <a href="/create" class="btn btn-small">New album</a>
+    </div>
+  </nav>
+
+  <main class="app-main">
+    <h1>My albums</h1>
+    <p class="app-sub">Albums live in this browser. If you made one on another device, open it there or use its link.</p>
+
+    <div id="empty-state" class="card" style="display:none;text-align:center">
+      <p style="margin-bottom:18px;color:var(--ink-soft)">No albums on this device yet.</p>
+      <a class="btn" href="/create">Create your first album</a>
+    </div>
+
+    <div id="mine-section" style="display:none">
+      <h2 class="albums-heading">Albums you host</h2>
+      <div id="mine-list"></div>
+    </div>
+
+    <div id="joined-section" style="display:none">
+      <h2 class="albums-heading">Albums you've joined</h2>
+      <div id="joined-list"></div>
+    </div>
+  </main>
+
+  <script type="module" src="assets/albums.js"></script>
+</body>
+</html>

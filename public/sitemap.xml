@@ -6,23 +6,33 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://getsnapjar.com/wedding.html</loc>
+    <loc>https://getsnapjar.com/wedding</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getsnapjar.com/birthday.html</loc>
+    <loc>https://getsnapjar.com/birthday</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://getsnapjar.com/baby-shower.html</loc>
+    <loc>https://getsnapjar.com/baby-shower</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://getsnapjar.com/guestpix-alternative.html</loc>
+    <loc>https://getsnapjar.com/guestpix-alternative</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://getsnapjar.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://getsnapjar.com/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="logo" href="/">snapjar<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <a href="/albums">My albums</a>
+      <a href="/create" class="btn btn-small">New album</a>
+    </div>
+  </nav>
+
+  <main class="app-main">
+    <h1>Settings</h1>
+    <p class="app-sub">An account is optional. It keeps your albums with you when you switch phones or clear your browser.</p>
+
+    <!-- signed out / anonymous -->
+    <div id="signedout-view" style="display:none">
+      <div class="card">
+        <h2 class="card-heading">Sign in or create an account</h2>
+        <p class="card-sub">Albums you made on this device come with you when you sign in here.</p>
+
+        <button class="btn" id="google-btn" type="button" style="width:100%">Continue with Google</button>
+
+        <div class="divider"><span>or use email</span></div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+        </div>
+        <button class="btn btn-outline" id="email-btn" type="button" style="width:100%">Continue with email</button>
+        <p class="hint" style="margin-top:10px">New here? The same button creates your account.</p>
+        <p class="form-error" id="auth-error"></p>
+      </div>
+    </div>
+
+    <!-- signed in -->
+    <div id="signedin-view" style="display:none">
+      <div class="card">
+        <h2 class="card-heading">Your account</h2>
+        <p class="card-sub" id="account-email"></p>
+        <div class="settings-actions">
+          <a class="btn btn-small" href="/albums">Manage my albums</a>
+          <button class="btn btn-small btn-outline" id="signout-btn" type="button">Sign out</button>
+        </div>
+      </div>
+
+      <div class="card danger-card">
+        <h2 class="card-heading">Delete account</h2>
+        <p class="card-sub">This removes your sign-in permanently. Your albums and their photos are not deleted automatically, so delete any albums you want gone from the My Albums page first.</p>
+        <button class="btn btn-small btn-outline danger-btn" id="delete-btn" type="button">Delete my account</button>
+        <p class="form-error" id="delete-error"></p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <span>snapjar<span class="logo-dot">.</span></span>
+    <span class="footer-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </span>
+  </footer>
+
+  <script type="module" src="assets/settings.js"></script>
+</body>
+</html>
