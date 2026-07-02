@@ -63,6 +63,9 @@ async function init() {
     loadingState.style.display = "none";
     albumView.style.display = "block";
 
+    if (isHost) setupRename();
+    if (location.hash === "#share") openShare();
+
     watchPhotos();
   } catch (err) {
     console.error(err);
@@ -288,6 +291,71 @@ lightbox.addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeLightbox();
+});
+
+// ---------- host: rename ----------
+
+function setupRename() {
+  const btn = document.getElementById("rename-btn");
+  btn.style.display = "inline-block";
+  btn.addEventListener("click", async () => {
+    const next = prompt("Album name:", eventData.name);
+    if (!next || !next.trim() || next.trim() === eventData.name) return;
+    const name = next.trim().slice(0, 60);
+    try {
+      await updateDoc(doc(db, "events", code), { name });
+      eventData.name = name;
+      document.getElementById("event-title").textContent = name;
+      document.title = `${name} · Snapjar`;
+    } catch (err) {
+      console.error(err);
+      alert("Couldn't rename just now. Try again in a minute.");
+    }
+  });
+}
+
+// ---------- share modal ----------
+
+const shareModal = document.getElementById("share-modal");
+
+function albumLink() {
+  return `${location.origin}/event?c=${code}`;
+}
+
+function openShare() {
+  const url = albumLink();
+  document.getElementById("share-qr").src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" +
+    encodeURIComponent(url);
+  document.getElementById("share-caption").textContent = eventData.name;
+  document.getElementById("share-domain").textContent = location.host;
+  document.getElementById("share-url").value = url;
+  shareModal.classList.add("open");
+  track("share_open", { album: code });
+}
+
+document.getElementById("share-btn").addEventListener("click", openShare);
+document.getElementById("share-close").addEventListener("click", () => shareModal.classList.remove("open"));
+shareModal.addEventListener("click", (e) => {
+  if (e.target === shareModal) shareModal.classList.remove("open");
+});
+
+document.getElementById("share-copy").addEventListener("click", async () => {
+  const input = document.getElementById("share-url");
+  try { await navigator.clipboard.writeText(input.value); }
+  catch { input.select(); document.execCommand("copy"); }
+  const btn = document.getElementById("share-copy");
+  btn.textContent = "Copied!";
+  setTimeout(() => (btn.textContent = "Copy"), 1600);
+});
+
+document.getElementById("share-native").addEventListener("click", async () => {
+  const url = albumLink();
+  if (navigator.share) {
+    try { await navigator.share({ title: eventData.name, text: `Add your photos to ${eventData.name}`, url }); } catch { /* cancelled */ }
+  } else {
+    try { await navigator.clipboard.writeText(url); alert("Link copied. Paste it anywhere."); } catch { /* ignore */ }
+  }
 });
 
 for (const id of ["header-upgrade", "upgrade-link", "guest-upgrade-link"]) {

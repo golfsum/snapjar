@@ -70,6 +70,7 @@ a { color: inherit; }
 
 @media (max-width: 640px) {
   .nav-links a:not(.btn) { display: none; }
+  .nav-links a#nav-account { display: inline; }
 }
 
 /* ---------- buttons ---------- */
@@ -905,6 +906,32 @@ a { color: inherit; }
 
 .lightbox-actions a:hover,
 .lightbox-actions button:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* share modal */
+
+.share-panel {
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 26px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.share-panel .qr-wrap { margin-bottom: 16px; padding: 16px; }
+.share-panel .qr-wrap img { width: 200px; height: 200px; }
+.share-panel .share-row { margin-bottom: 14px; }
+
+.host-rename {
+  margin-left: 8px;
+  background: transparent;
+  color: var(--paper);
+  border-color: rgba(250, 246, 239, 0.4);
+}
+
+.host-rename:hover { border-color: var(--paper); }
 
 /* host bar + limit notice */
 

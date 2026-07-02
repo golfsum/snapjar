@@ -75,6 +75,12 @@ function renderSection(prefix, list, isMine) {
     open.textContent = "Open";
     actions.appendChild(open);
 
+    const qr = document.createElement("a");
+    qr.className = "btn btn-small btn-outline";
+    qr.href = `/event?c=${album.code}#share`;
+    qr.textContent = "QR & share";
+    actions.appendChild(qr);
+
     card.append(top, actions);
     container.appendChild(card);
 

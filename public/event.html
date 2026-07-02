@@ -17,6 +17,7 @@
     <a class="logo" href="/">snapjar<span class="logo-dot">.</span></a>
     <div class="nav-links">
       <a href="/albums">My albums</a>
+      <a id="nav-account" href="/settings">Sign in</a>
       <a href="/create" class="btn btn-small">Start your own</a>
     </div>
   </nav>
@@ -50,6 +51,7 @@
       <div class="host-bar" id="host-bar" style="display:none">
         You're the host. Tap any photo to open it, then delete it if someone got silly.
         <span id="host-guests"></span>
+        <button class="mini-btn host-rename" id="rename-btn" type="button" style="display:none">Rename</button>
       </div>
 
       <div class="limit-note" id="limit-note" style="display:none">
@@ -60,6 +62,7 @@
       <div class="upload-bar">
         <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
         <button class="btn" id="upload-btn" type="button">Add photos</button>
+        <button class="btn btn-outline" id="share-btn" type="button">Share</button>
         <input type="file" id="file-input" accept="image/*" multiple hidden>
       </div>
 
@@ -75,6 +78,26 @@
     </div>
   </main>
 
+  <div class="lightbox" id="share-modal">
+    <div class="share-panel">
+      <div class="qr-wrap print-card">
+        <img id="share-qr" alt="QR code for this album">
+        <div class="qr-caption" id="share-caption"></div>
+        <div style="font-size:0.8rem;color:var(--ink-soft)">Scan to add your photos</div>
+        <div class="qr-domain" id="share-domain"></div>
+      </div>
+      <div class="share-row">
+        <input id="share-url" type="text" readonly>
+        <button class="btn btn-small" id="share-copy" type="button">Copy</button>
+      </div>
+      <div class="success-actions">
+        <button class="btn btn-small" id="share-native" type="button">Send to someone</button>
+        <button class="btn btn-small btn-outline" type="button" onclick="window.print()">Print table card</button>
+        <button class="btn btn-small btn-outline" id="share-close" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="lightbox" id="lightbox">
     <div class="lightbox-actions">
       <a id="lb-download" href="#" download target="_blank" rel="noopener">Save</a>
@@ -85,5 +108,6 @@
   </div>
 
   <script type="module" src="assets/event.js"></script>
+  <script type="module" src="assets/nav.js"></script>
 </body>
 </html>
