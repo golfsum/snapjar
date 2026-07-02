@@ -63,6 +63,7 @@
         <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
         <button class="btn" id="upload-btn" type="button">Add photos</button>
         <button class="btn btn-outline" id="share-btn" type="button">Share</button>
+        <button class="btn btn-outline" id="select-btn" type="button" style="display:none">Select</button>
         <input type="file" id="file-input" accept="image/*" multiple hidden>
       </div>
 
@@ -73,10 +74,30 @@
         <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
       </div>
 
-      <div class="gallery" id="gallery"></div>
+      <div id="gallery"></div>
 
     </div>
   </main>
+
+  <div class="select-bar" id="select-bar">
+    <span id="select-count">0 selected</span>
+    <div class="select-bar-actions">
+      <button class="btn btn-small select-delete" id="select-delete" type="button" disabled>Delete</button>
+      <button class="btn btn-small btn-outline" id="select-cancel" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div class="lightbox" id="limit-modal">
+    <div class="share-panel">
+      <div class="limit-art">&#128248;</div>
+      <h2 class="limit-title" id="limit-title">This album is full</h2>
+      <p class="limit-copy" id="limit-copy"></p>
+      <div class="success-actions">
+        <a class="btn" id="limit-upgrade" href="#" target="_blank" rel="noopener">Unlock unlimited, $19</a>
+        <button class="btn btn-outline" id="limit-close" type="button">Maybe later</button>
+      </div>
+    </div>
+  </div>
 
   <div class="lightbox" id="share-modal">
     <div class="share-panel">
