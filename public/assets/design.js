@@ -106,13 +106,19 @@ function applyEl(el) {
     node.style.textTransform = el.caps ? "uppercase" : "none";
     node.style.letterSpacing = el.caps ? "0.12em" : "normal";
     node.style.textAlign = "center";
-    if (node.firstChild?.nodeType !== 3 || node.textContent !== el.text) {
-      if (document.activeElement !== node) node.textContent = el.text;
+    // Update the text WITHOUT destroying the resize handle. Setting
+    // textContent wipes every child node, so lift the handle out first and
+    // drop it back after (recreating it if editing clobbered it).
+    const editing = document.activeElement === node;
+    if (!editing && node.textContent !== el.text) {
+      const handle = node.querySelector(".handle");
+      node.textContent = el.text;
+      if (handle) node.appendChild(handle);
     }
+    ensureHandle(el);
     // An empty line (a cleared table label, say) just disappears. It comes
     // back the moment you type. Elements are absolutely positioned, so hiding
     // one leaves no gap. Stay visible while it's being edited so you can type.
-    const editing = document.activeElement === node;
     node.style.display = (!editing && !(el.text || "").trim()) ? "none" : "";
   } else if (el.type === "qr" || el.type === "image") {
     node.style.width = el.size + "%";
@@ -137,14 +143,11 @@ function makeNode(el) {
     if (qrDataUrl) img.src = qrDataUrl;
     node.appendChild(img);
   }
-  const handle = document.createElement("div");
-  handle.className = "handle";
-  node.appendChild(handle);
-
   el.node = node;
   canvas.appendChild(node);
+  attachHandle(el);
+  wireElement(el);
   applyEl(el);
-  wireElement(el, handle);
   return node;
 }
 
@@ -158,7 +161,7 @@ function addTextEl(props) {
 
 // ---------- drag + resize ----------
 
-function wireElement(el, handle) {
+function wireElement(el) {
   const node = el.node;
 
   node.addEventListener("pointerdown", (e) => {
@@ -191,6 +194,27 @@ function wireElement(el, handle) {
     node.addEventListener("pointerup", up);
   });
 
+  if (el.type === "text") {
+    node.addEventListener("dblclick", () => startEditing(node));
+    node.addEventListener("blur", () => {
+      node.contentEditable = "false";
+      el.text = node.textContent.trim();
+      if (el.core === "heading") document.getElementById("f-heading").value = el.text;
+      if (el.core === "label") { document.getElementById("f-label").value = el.text; regenQr(); }
+      if (el.core === "sub") document.getElementById("f-sub").value = el.text;
+      applyEl(el);
+    });
+  }
+}
+
+// The blue resize dot. Kept in its own function so it can be rebuilt if a text
+// update ever wipes it (setting textContent clears every child node).
+function attachHandle(el) {
+  const handle = document.createElement("div");
+  handle.className = "handle";
+  handle.contentEditable = "false";
+  el.node.appendChild(handle);
+
   handle.addEventListener("pointerdown", (e) => {
     e.preventDefault(); e.stopPropagation();
     selectEl(el);
@@ -210,18 +234,11 @@ function wireElement(el, handle) {
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
   });
+  return handle;
+}
 
-  if (el.type === "text") {
-    node.addEventListener("dblclick", () => startEditing(node));
-    node.addEventListener("blur", () => {
-      node.contentEditable = "false";
-      el.text = node.textContent.trim();
-      if (el.core === "heading") document.getElementById("f-heading").value = el.text;
-      if (el.core === "label") { document.getElementById("f-label").value = el.text; regenQr(); }
-      if (el.core === "sub") document.getElementById("f-sub").value = el.text;
-      applyEl(el);
-    });
-  }
+function ensureHandle(el) {
+  if (el.node && !el.node.querySelector(".handle")) attachHandle(el);
 }
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
