@@ -335,6 +335,7 @@ function buildTemplate(id) {
   bgImage = null;
   canvas.style.backgroundImage = "";
   canvas.style.background = t.bg;
+  document.getElementById("card-footer").style.color = t.sub.color;
   document.getElementById("bg-color").value = t.bg.length === 7 ? t.bg : "#f7f3ec";
   overlay.style.background = "transparent";
   document.getElementById("overlay-row").style.display = "none";
@@ -399,9 +400,11 @@ document.getElementById("download-btn").addEventListener("click", async () => {
     if (code) {
       const snap = await getDoc(doc(db, "events", code));
       if (snap.exists()) {
-        const name = snap.data().name;
+        const data = snap.data();
         const heading = coreOf("heading");
-        if (heading && name) { heading.text = name; applyEl(heading); document.getElementById("f-heading").value = name; }
+        if (heading && data.name) { heading.text = data.name; applyEl(heading); document.getElementById("f-heading").value = data.name; }
+        // Paid albums get watermark-free signs.
+        if (data.paid) document.getElementById("card-footer").classList.add("hidden");
       }
     }
   } catch (err) { console.error(err); }

@@ -1,18 +1,18 @@
-/* Snapjar styles. Warm, editorial, a little scrapbook-y. */
+/* Snapjar styles. Clean, modern SaaS look (matches the album app). */
 
 :root {
-  --paper: #faf6ef;
-  --paper-deep: #f3ecdf;
-  --ink: #211c15;
-  --ink-soft: #5d564a;
-  --accent: #d4502b;
-  --accent-deep: #b03e1f;
-  --sage: #7d8f69;
-  --card: #fffdf9;
-  --line: #e5dccb;
-  --radius: 14px;
-  --shadow: 0 2px 6px rgba(33, 28, 21, 0.06), 0 12px 32px rgba(33, 28, 21, 0.08);
-  --font-display: "Fraunces", Georgia, serif;
+  --paper: #ffffff;
+  --paper-deep: #f5f6f8;
+  --ink: #101828;
+  --ink-soft: #667085;
+  --accent: #2f6bed;
+  --accent-deep: #1d54c7;
+  --sage: #12b76a;
+  --card: #ffffff;
+  --line: #e5e7eb;
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px rgba(16, 24, 40, 0.08);
+  --font-display: "Inter", -apple-system, system-ui, sans-serif;
   --font-body: "Inter", -apple-system, system-ui, sans-serif;
 }
 
@@ -30,9 +30,9 @@ body {
 
 h1, h2, h3 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
 }
 
 a { color: inherit; }
@@ -77,30 +77,33 @@ a { color: inherit; }
 
 .btn {
   display: inline-block;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: #fff;
   text-decoration: none;
   font-weight: 600;
   font-size: 1rem;
-  padding: 14px 28px;
-  border-radius: 999px;
-  border: 2px solid var(--ink);
+  padding: 13px 26px;
+  border-radius: 12px;
+  border: 1.5px solid var(--accent);
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   font-family: var(--font-body);
+  box-shadow: 0 1px 2px rgba(47,107,237,0.35);
 }
 
-.btn:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+.btn:hover { background: var(--accent-deep); border-color: var(--accent-deep); transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 
-.btn-small { padding: 9px 20px; font-size: 0.9rem; }
-.btn-big { padding: 17px 36px; font-size: 1.1rem; }
+.btn-small { padding: 9px 18px; font-size: 0.9rem; border-radius: 10px; }
+.btn-big { padding: 16px 34px; font-size: 1.08rem; }
 
 .btn-outline {
   background: transparent;
-  color: var(--ink);
+  color: var(--accent);
+  border-color: var(--line);
+  box-shadow: none;
 }
-.btn-outline:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn-outline:hover { background: var(--paper-deep); color: var(--accent); border-color: var(--line-strong, #d1d5db); }
 
 .btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
 

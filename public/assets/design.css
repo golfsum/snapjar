@@ -141,6 +141,17 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); -webk
 }
 .card-overlay { position: absolute; inset: 0; background: transparent; pointer-events: none; }
 
+/* Locked branding footer (free tier). Not draggable or editable; paid albums
+   hide it. Uses cqw so it scales with the card on print and PNG export. */
+.card-footer {
+  position: absolute; left: 0; right: 0; bottom: 3cqw; z-index: 5;
+  text-align: center; pointer-events: none;
+  font-family: "Inter", -apple-system, system-ui, sans-serif; color: currentColor;
+}
+.card-footer .cf-powered { font-size: 2.7cqw; font-weight: 600; letter-spacing: 0.05em; }
+.card-footer .cf-url { font-size: 2.3cqw; opacity: 0.7; letter-spacing: 0.07em; margin-top: 0.4cqw; }
+.card-footer.hidden { display: none; }
+
 .el { position: absolute; cursor: move; touch-action: none; transition: box-shadow 120ms var(--ease); }
 .el.text {
   min-width: 40px; padding: 2px 4px; outline: none; white-space: pre-wrap;
