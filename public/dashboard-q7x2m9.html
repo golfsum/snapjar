@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snapjar HQ</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+
+  <!-- gate -->
+  <div class="gate" id="gate-view">
+    <div class="gate-card">
+      <div class="gate-logo">snapjar<span>.</span></div>
+      <h1>HQ dashboard</h1>
+      <p>Sign in with the owner Google account to continue.</p>
+      <button class="hq-signout" id="signin-btn" type="button" style="border-color:var(--accent);color:var(--accent);font-weight:600;padding:11px">Sign in with Google</button>
+      <p class="gate-error" id="gate-error"></p>
+    </div>
+  </div>
+
+  <div class="gate" id="loading-view" style="display:none">
+    <p style="color:var(--muted)">Loading your data...</p>
+  </div>
+
+  <!-- dashboard -->
+  <div class="hq" id="hq-view" style="display:none">
+
+    <aside class="hq-side">
+      <div class="hq-brand">snapjar<span> HQ</span></div>
+      <button class="hq-nav active" data-view="overview" type="button"><span class="ico">&#9632;</span> Overview</button>
+      <button class="hq-nav" data-view="albums" type="button"><span class="ico">&#9638;</span> Albums</button>
+      <button class="hq-nav" data-view="reports" type="button"><span class="ico">&#9873;</span> Reports <span class="nav-badge" id="reports-badge" hidden></span></button>
+      <a class="hq-nav" href="https://analytics.google.com" target="_blank" rel="noopener"><span class="ico">&#8599;</span> Analytics</a>
+      <a class="hq-nav" href="/" target="_blank" rel="noopener"><span class="ico">&#8599;</span> Live site</a>
+      <div class="hq-side-spacer"></div>
+      <div class="hq-side-foot">
+        Signed in as
+        <div class="email" id="who"></div>
+        <button class="hq-signout" id="signout-btn" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="hq-main">
+
+      <div class="hq-head">
+        <h1 id="view-title">Overview</h1>
+        <span class="hq-updated" id="updated"></span>
+      </div>
+
+      <!-- overview -->
+      <section class="hq-view" id="view-overview">
+        <div class="stat-cards" id="stat-cards"></div>
+
+        <div class="panel">
+          <h2>New albums per day</h2>
+          <p class="panel-sub">Last 14 days, from album creation dates.</p>
+          <div class="chart-wrap" id="chart"></div>
+        </div>
+
+        <div class="hq-cols">
+          <div class="panel">
+            <h2>Biggest albums</h2>
+            <p class="panel-sub">By photos collected.</p>
+            <div class="rowlist" id="top-list"></div>
+          </div>
+          <div class="panel">
+            <h2>Recent albums</h2>
+            <p class="panel-sub">Newest first.</p>
+            <div class="rowlist" id="recent-list"></div>
+          </div>
+        </div>
+
+        <div class="note-card">
+          QR scans, downloads, and traffic sources are measured in
+          <a href="https://analytics.google.com" target="_blank" rel="noopener">Google Analytics</a>,
+          not stored here. The numbers above come straight from your live database.
+        </div>
+      </section>
+
+      <!-- reports -->
+      <section class="hq-view" id="view-reports" hidden>
+        <div class="panel">
+          <h2>Reported photos</h2>
+          <p class="panel-sub">Guests flag photos here. Open the photo, then remove it or dismiss the report.</p>
+          <div class="rowlist" id="report-rows"></div>
+        </div>
+      </section>
+
+      <!-- albums -->
+      <section class="hq-view" id="view-albums" hidden>
+        <div class="panel">
+          <h2>All albums</h2>
+          <p class="panel-sub">Mark an album paid after its Stripe payment lands. The payment's reference is the album code.</p>
+          <div class="table-wrap">
+            <table class="hq-table">
+              <thead>
+                <tr>
+                  <th>Album</th><th>Code</th><th>Photos</th><th>Created</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="album-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="assets/dashboard.js"></script>
+</body>
+</html>

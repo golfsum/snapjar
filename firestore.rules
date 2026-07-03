@@ -41,6 +41,16 @@ service cloud.firestore {
             || request.resource.data.photoCount == resource.data.photoCount - 1
           )
         )
+        // Vanity counters. Anyone can bump them by one step; worst case is a
+        // slightly inflated stat, never anything that touches money or data.
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scanCount'])
+          && request.resource.data.scanCount == resource.data.get('scanCount', 0) + 1
+        )
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadCount'])
+          && request.resource.data.downloadCount > resource.data.get('downloadCount', 0)
+        )
         || (
           resource.data.hostUid == request.auth.uid
           && request.resource.data.paid == resource.data.paid
@@ -74,6 +84,32 @@ service cloud.firestore {
           || get(/databases/$(database)/documents/events/$(code)).data.hostUid == request.auth.uid
         ));
       }
+
+      // Guestbook messages. Anyone with the album can read and post. You can
+      // delete your own; the host and admin can delete any.
+      match /messages/{msgId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500;
+        allow update: if false;
+        allow delete: if isAdmin() || (request.auth != null && (
+          resource.data.authorUid == request.auth.uid
+          || get(/databases/$(database)/documents/events/$(code)).data.hostUid == request.auth.uid
+        ));
+      }
+    }
+
+    // Photo reports. Any signed-in guest can flag a photo. Only the owner
+    // reads or clears them, from the HQ dashboard. Nobody can enumerate or
+    // edit reports, so they can't be used to snoop or tamper.
+    match /reports/{reportId} {
+      allow create: if request.auth != null
+        && request.resource.data.reporterUid == request.auth.uid;
+      allow read, list, delete: if isAdmin();
+      allow update: if false;
     }
   }
 }

@@ -37,51 +37,93 @@
         <p class="eyebrow">You're invited to add photos</p>
         <h1 id="event-title"></h1>
         <p class="event-meta" id="event-meta"></p>
-        <div class="header-actions" id="host-actions" style="display:none">
-          <a class="btn btn-small" id="header-upgrade" href="#" target="_blank" rel="noopener">Unlock unlimited photos, $19</a>
-        </div>
         <div class="header-actions" id="guest-upgrade" style="display:none">
           <a class="header-upgrade-link" id="guest-upgrade-link" href="#" target="_blank" rel="noopener">Unlock unlimited photos for this album, $19</a>
         </div>
-        <div class="header-actions" id="paid-badge" style="display:none">
-          <span class="badge-pill">Party album &middot; unlimited photos</span>
-        </div>
       </header>
 
-      <div class="host-bar" id="host-bar" style="display:none">
-        You're the host. Tap any photo to open it, then delete it if someone got silly.
-        <span id="host-guests"></span>
-        <button class="mini-btn host-rename" id="rename-btn" type="button" style="display:none">Rename</button>
-      </div>
+      <!-- ALBUM TAB -->
+      <section class="tab-panel" id="tab-album">
 
-      <div class="limit-note" id="limit-note" style="display:none">
-        This free album is full (25 photos). Unlock unlimited photos for $19, one time.
-        <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
-      </div>
+        <div class="live-moments" id="live-moments" style="display:none">
+          <div class="lm-head"><span class="lm-dot"></span> Live moments</div>
+          <div class="lm-list" id="lm-list"></div>
+        </div>
 
-      <div class="upload-bar">
-        <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
-        <button class="btn" id="upload-btn" type="button">Add photos</button>
-        <button class="btn btn-outline" id="share-btn" type="button">Share</button>
-        <input type="file" id="file-input" accept="image/*" multiple hidden>
-      </div>
+        <div class="limit-note" id="limit-note" style="display:none">
+          This free album is full (25 photos). Unlock unlimited photos for $19, one time.
+          <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
+        </div>
 
-      <p class="upload-status" id="upload-status"></p>
+        <div class="upload-bar">
+          <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
+          <button class="btn" id="upload-btn" type="button">Add photos</button>
+          <button class="btn btn-outline" id="share-btn" type="button">Share</button>
+          <input type="file" id="file-input" accept="image/*" multiple hidden>
+        </div>
 
-      <div class="empty-gallery" id="empty-gallery" style="display:none">
-        <div class="big">&#128247;</div>
-        <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
-      </div>
+        <p class="upload-status" id="upload-status"></p>
 
-      <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
-        <button class="mini-btn" id="download-all-btn" type="button">Download all</button>
-        <button class="mini-btn" id="select-btn" type="button" style="display:none">Select</button>
-      </div>
+        <div class="chips" id="chips">
+          <button class="chip active" data-filter="all" type="button">All</button>
+          <button class="chip" data-filter="today" type="button">Today</button>
+          <button class="chip" data-filter="mine" type="button">Mine</button>
+        </div>
 
-      <div id="gallery"></div>
+        <div class="empty-gallery" id="empty-gallery" style="display:none">
+          <div class="big">&#128247;</div>
+          <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
+        </div>
+
+        <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
+          <button class="mini-btn" id="download-all-btn" type="button">Download all</button>
+          <button class="mini-btn" id="select-btn" type="button" style="display:none">Select</button>
+        </div>
+
+        <div id="gallery"></div>
+      </section>
+
+      <!-- GUESTS TAB -->
+      <section class="tab-panel" id="tab-guests" hidden>
+        <h2 class="tab-title" id="guests-count">Guests</h2>
+        <div class="rowlist" id="guests-list"></div>
+      </section>
+
+      <!-- MESSAGES TAB -->
+      <section class="tab-panel" id="tab-messages" hidden>
+        <h2 class="tab-title">Messages</h2>
+        <div class="msg-list" id="msg-list"></div>
+        <div class="msg-empty" id="msg-empty" style="display:none">No messages yet. Say something nice.</div>
+        <div class="msg-compose">
+          <input type="text" id="msg-input" placeholder="Write a message..." maxlength="500">
+          <button class="btn" id="msg-send" type="button">Send</button>
+        </div>
+      </section>
+
+      <!-- SETTINGS TAB -->
+      <section class="tab-panel" id="tab-settings" hidden>
+        <h2 class="tab-title">Album</h2>
+        <div class="set-list">
+          <button class="set-row" id="set-share" type="button"><span>Share album</span><span class="chev">&#8250;</span></button>
+          <button class="set-row" id="set-download" type="button"><span>Download all photos</span><span class="chev">&#8250;</span></button>
+          <button class="set-row" id="set-rename" type="button" hidden><span>Rename album</span><span class="chev">&#8250;</span></button>
+          <a class="set-row" id="set-upgrade" href="#" target="_blank" rel="noopener" hidden><span>Unlock unlimited photos, $19</span><span class="chev">&#8250;</span></a>
+          <span class="set-row set-badge" id="set-paid" hidden><span>Party album, unlimited photos</span><span>&#10003;</span></span>
+          <a class="set-row" href="/albums"><span>My albums</span><span class="chev">&#8250;</span></a>
+          <a class="set-row" href="/settings"><span>Account settings</span><span class="chev">&#8250;</span></a>
+        </div>
+        <p class="set-foot">snapjar<span style="color:var(--accent)">.</span></p>
+      </section>
 
     </div>
   </main>
+
+  <nav class="tabbar" id="tabbar" style="display:none">
+    <button class="tabbar-btn active" data-tab="album" type="button"><span class="tb-ico">&#9635;</span><span>Album</span></button>
+    <button class="tabbar-btn" data-tab="guests" type="button"><span class="tb-ico">&#128101;</span><span>Guests</span></button>
+    <button class="tabbar-btn" data-tab="messages" type="button"><span class="tb-ico">&#128172;</span><span>Messages</span><span class="tb-dot" id="msg-dot" hidden></span></button>
+    <button class="tabbar-btn" data-tab="settings" type="button"><span class="tb-ico">&#9881;</span><span>Settings</span></button>
+  </nav>
 
   <div class="select-bar" id="select-bar">
     <span id="select-count">0 selected</span>
@@ -127,10 +169,25 @@
   <div class="lightbox" id="lightbox">
     <div class="lightbox-actions">
       <a id="lb-download" href="#" download target="_blank" rel="noopener">Save</a>
+      <button id="lb-report" type="button">Report</button>
       <button id="lb-delete" type="button" style="display:none">Delete</button>
       <button id="lb-close" type="button">Close</button>
     </div>
     <img id="lb-img" alt="Event photo">
+  </div>
+
+  <div class="lightbox" id="report-modal">
+    <div class="share-panel">
+      <h2 class="limit-title">Report this photo</h2>
+      <p class="limit-copy">Tell the host what's wrong. They'll review it.</p>
+      <div class="report-reasons" id="report-reasons">
+        <button class="btn btn-outline" type="button" data-reason="Inappropriate content">Inappropriate content</button>
+        <button class="btn btn-outline" type="button" data-reason="Poor quality">Poor quality</button>
+        <button class="btn btn-outline" type="button" data-reason="Duplicate">Duplicate</button>
+        <button class="btn btn-outline" type="button" data-reason="Other">Something else</button>
+      </div>
+      <button class="btn btn-outline" id="report-cancel" type="button" style="margin-top:6px">Cancel</button>
+    </div>
   </div>
 
   <script type="module" src="assets/event.js"></script>

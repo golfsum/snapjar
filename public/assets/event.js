@@ -56,17 +56,19 @@ async function init() {
       ? `Hosted by ${eventData.hostName}`
       : "Tap the button below to add yours";
 
-    if (isHost) document.getElementById("host-bar").style.display = "block";
-
     rememberVisit(code, eventData.name);
+    countScanIfQr();
 
     loadingState.style.display = "none";
     albumView.style.display = "block";
+    document.getElementById("tabbar").style.display = "flex";
 
-    if (isHost) setupRename();
+    setupTabs();
+    setupSettingsTab();
     if (location.hash === "#share") openShare();
 
     watchPhotos();
+    watchMessages();
   } catch (err) {
     console.error(err);
     showMissing();
@@ -89,6 +91,24 @@ function rememberVisit(albumCode, name) {
   } catch { /* private browsing, fine */ }
 }
 
+// The QR code encodes ...&s=qr, so a scan is distinguishable from a shared
+// link. Count it once, then strip the marker so a reload doesn't recount.
+function countScanIfQr() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("s") !== "qr") return;
+  updateDoc(doc(db, "events", code), { scanCount: increment(1) }).catch(() => {});
+  track("qr_scan", { album: code });
+  params.delete("s");
+  const clean = `${location.pathname}?${params.toString()}`.replace(/\?$/, "");
+  history.replaceState(null, "", clean + location.hash);
+}
+
+// Fire-and-forget download tally for the dashboard.
+function bumpDownloads(n) {
+  if (!n) return;
+  updateDoc(doc(db, "events", code), { downloadCount: increment(n) }).catch(() => {});
+}
+
 function atFreeLimit() {
   return !eventData.paid && (eventData.photoCount || 0) >= FREE_PHOTO_LIMIT;
 }
@@ -97,15 +117,17 @@ function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
   document.getElementById("upgrade-link").href = upgradeUrlFor(code);
 
-  // Hosts get the prominent upgrade button. Everyone else gets a quieter
-  // link, because the host's other device and generous friends both count.
-  document.getElementById("host-actions").style.display =
-    isHost && !eventData.paid ? "block" : "none";
+  // Quiet header nudge for guests on an unpaid album.
   document.getElementById("guest-upgrade").style.display =
     !isHost && !eventData.paid ? "block" : "none";
-  document.getElementById("header-upgrade").href = upgradeUrlFor(code);
   document.getElementById("guest-upgrade-link").href = upgradeUrlFor(code);
-  document.getElementById("paid-badge").style.display = eventData.paid ? "block" : "none";
+
+  // The Settings tab holds the host's upgrade action and the paid badge.
+  const setUpgrade = document.getElementById("set-upgrade");
+  const setPaid = document.getElementById("set-paid");
+  setUpgrade.href = upgradeUrlFor(code);
+  setUpgrade.hidden = eventData.paid;
+  setPaid.hidden = !eventData.paid;
 }
 
 // ---------- live gallery ----------
@@ -121,16 +143,100 @@ function watchPhotos() {
       if (change.type === "removed") photoCache.delete(change.doc.id);
     }
     renderGallery();
+    renderMoments();
+    renderGuests();
     emptyGallery.style.display = photoCache.size ? "none" : "block";
     // Keep the local count roughly in sync for the limit check
     eventData.photoCount = snap.size;
     refreshLimitUi();
-    if (isHost) refreshGuestList();
   });
 }
 
+// ---------- live moments ----------
+
+function relTime(ms) {
+  if (!ms) return "";
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 10) return "just now";
+  if (s < 60) return `${s} sec ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hr ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? "yesterday" : `${d} days ago`;
+}
+
+// Builds a short activity feed by grouping recent uploads into "moments":
+// same person, uploads close together, become one line.
+function renderMoments() {
+  const strip = document.getElementById("live-moments");
+  const list = document.getElementById("lm-list");
+
+  const photos = [...photoCache.values()]
+    .map((d) => ({ name: d.uploaderName || null, ts: tsMillis(d.createdAt) }))
+    .filter((p) => p.ts)
+    .sort((a, b) => b.ts - a.ts);
+
+  if (!photos.length) { strip.style.display = "none"; return; }
+
+  const moments = [];
+  for (const p of photos) {
+    const last = moments[moments.length - 1];
+    if (last && last.name === p.name && last.ts - p.ts < 10 * 60 * 1000) {
+      last.count++;
+      // keep the latest ts (already the first seen since sorted desc)
+    } else {
+      moments.push({ name: p.name, count: 1, ts: p.ts });
+    }
+    if (moments.length >= 4) break;
+  }
+
+  list.textContent = "";
+  for (const m of moments.slice(0, 3)) {
+    const who = m.name || "A guest";
+    const what = m.count === 1 ? "added a photo" : `added ${m.count} photos`;
+    const row = document.createElement("div");
+    row.className = "lm-item";
+    const av = document.createElement("span");
+    av.className = "lm-av";
+    av.textContent = (m.name ? m.name.trim()[0] : "?").toUpperCase();
+    const txt = document.createElement("span");
+    txt.className = "lm-txt";
+    txt.innerHTML = `<strong>${escapeMoment(who)}</strong> ${what}`;
+    const time = document.createElement("span");
+    time.className = "lm-time";
+    time.textContent = relTime(m.ts);
+    row.append(av, txt, time);
+    list.appendChild(row);
+  }
+  strip.style.display = "block";
+}
+
+function escapeMoment(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Keep the "12 sec ago" labels honest without a re-fetch.
+setInterval(() => { if (photoCache.size) renderMoments(); }, 30000);
+
 function tsMillis(t) {
   return t && typeof t.toMillis === "function" ? t.toMillis() : 0;
+}
+
+let activeFilter = "all";
+
+function passesFilter(data) {
+  if (activeFilter === "guest") return (data.uploaderName || "") === (guestNameFilter || "");
+  if (activeFilter === "mine") return data.uploaderUid === currentUser.uid;
+  if (activeFilter === "today") {
+    const ms = tsMillis(data.createdAt);
+    if (!ms) return false;
+    const d = new Date(ms), now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }
+  return true;
 }
 
 // Photos are grouped by who added them, newest activity on top,
@@ -138,6 +244,7 @@ function tsMillis(t) {
 function renderGallery() {
   const groups = new Map();
   for (const [id, data] of photoCache) {
+    if (!passesFilter(data)) continue;
     const key = data.uploaderName || "";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push([id, data]);
@@ -149,6 +256,15 @@ function renderGallery() {
   }).sort((a, b) => b.latest - a.latest);
 
   gallery.textContent = "";
+
+  if (!sorted.length && photoCache.size) {
+    const note = document.createElement("p");
+    note.className = "filter-empty";
+    note.textContent = activeFilter === "mine"
+      ? "You haven't added any photos yet."
+      : "Nothing here for this filter.";
+    gallery.appendChild(note);
+  }
 
   for (const g of sorted) {
     const wrap = document.createElement("div");
@@ -344,7 +460,8 @@ async function downloadMany(entries, zipName) {
 
   if (entries.length === 1) {
     setStatus("Downloading photo...");
-    await downloadOne(entries[0][0]);
+    const done = await downloadOne(entries[0][0]);
+    if (done) bumpDownloads(1);
     setStatus("");
     return;
   }
@@ -386,6 +503,7 @@ async function downloadMany(entries, zipName) {
   setStatus("Zipping it all up...");
   const blob = await zip.generateAsync({ type: "blob" });
   saveBlob(blob, zipName);
+  bumpDownloads(ok);
   track("download_zip", { album: code, count: ok });
   setStatus(ok === entries.length ? "Downloaded!" : `Downloaded ${ok} of ${entries.length}.`);
   setTimeout(() => setStatus(""), 4000);
@@ -402,18 +520,59 @@ document.getElementById("download-all-btn").addEventListener("click", () => {
 });
 
 // Hosts see who's been contributing, built from the names on the photos.
-function refreshGuestList() {
-  const names = new Set();
-  let anonymous = 0;
+// Guests tab: one row per contributor, tap to see just their photos.
+function renderGuests() {
+  const counts = new Map(); // name -> count, "" bucket = unnamed
   for (const data of photoCache.values()) {
-    if (data.uploaderName) names.add(data.uploaderName);
-    else anonymous++;
+    const key = data.uploaderName || "";
+    counts.set(key, (counts.get(key) || 0) + 1);
   }
-  const el = document.getElementById("host-guests");
-  if (!names.size && !anonymous) { el.textContent = ""; return; }
-  const parts = [...names];
-  if (anonymous) parts.push(`${anonymous} unnamed`);
-  el.textContent = ` Photos from: ${parts.join(", ")}.`;
+
+  const named = [...counts.entries()].filter(([k]) => k).sort((a, b) => b[1] - a[1]);
+  const unnamed = counts.get("") || 0;
+
+  const list = document.getElementById("guests-list");
+  const countEl = document.getElementById("guests-count");
+  countEl.textContent = `Guests (${named.length}${unnamed ? " + unnamed" : ""})`;
+
+  list.textContent = "";
+
+  if (!counts.size) {
+    list.innerHTML = `<p class="filter-empty">No one has added photos yet.</p>`;
+    return;
+  }
+
+  const addRow = (name, count, filterName) => {
+    const row = document.createElement("button");
+    row.className = "guest-row";
+    row.type = "button";
+    const av = document.createElement("span");
+    av.className = "guest-av";
+    av.textContent = name ? name.trim()[0].toUpperCase() : "?";
+    const main = document.createElement("span");
+    main.className = "guest-main";
+    main.innerHTML = `<span class="guest-name">${escapeMoment(name || "No name given")}</span>
+      <span class="guest-sub">${count} photo${count === 1 ? "" : "s"}</span>`;
+    const chev = document.createElement("span");
+    chev.className = "chev";
+    chev.innerHTML = "&#8250;";
+    row.append(av, main, chev);
+    row.addEventListener("click", () => showGuestPhotos(filterName));
+    list.appendChild(row);
+  };
+
+  for (const [name, count] of named) addRow(name, count, name);
+  if (unnamed) addRow("", unnamed, "");
+}
+
+// Jump to the Album tab filtered to one guest's photos.
+let guestNameFilter = null;
+function showGuestPhotos(name) {
+  guestNameFilter = name;
+  activeFilter = "guest";
+  for (const c of document.querySelectorAll(".chip")) c.classList.remove("active");
+  switchTab("album");
+  renderGallery();
 }
 
 // ---------- uploads ----------
@@ -609,29 +768,199 @@ lightbox.addEventListener("click", (e) => {
   if (e.target === lightbox) closeLightbox();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeLightbox();
+  if (e.key === "Escape") { closeLightbox(); reportModal.classList.remove("open"); }
 });
 
-// ---------- host: rename ----------
+// ---------- report a photo ----------
 
-function setupRename() {
-  const btn = document.getElementById("rename-btn");
-  btn.style.display = "inline-block";
+const reportModal = document.getElementById("report-modal");
+let reportPhotoId = null;
+
+document.getElementById("lb-report").addEventListener("click", () => {
+  reportPhotoId = lightboxPhotoId;
+  reportModal.classList.add("open");
+});
+
+document.getElementById("report-cancel").addEventListener("click", () => reportModal.classList.remove("open"));
+reportModal.addEventListener("click", (e) => {
+  if (e.target === reportModal) reportModal.classList.remove("open");
+});
+
+for (const btn of document.querySelectorAll("#report-reasons button")) {
   btn.addEventListener("click", async () => {
-    const next = prompt("Album name:", eventData.name);
-    if (!next || !next.trim() || next.trim() === eventData.name) return;
-    const name = next.trim().slice(0, 60);
+    const reason = btn.dataset.reason;
+    const id = reportPhotoId;
+    const data = photoCache.get(id);
+    reportModal.classList.remove("open");
+    closeLightbox();
+    if (!id || !data) return;
     try {
-      await updateDoc(doc(db, "events", code), { name });
-      eventData.name = name;
-      document.getElementById("event-title").textContent = name;
-      document.title = `${name} · Snapjar`;
+      await addDoc(collection(db, "reports"), {
+        albumCode: code,
+        albumName: eventData.name || null,
+        photoId: id,
+        photoUrl: data.url,
+        uploaderName: data.uploaderName || null,
+        reason,
+        reporterUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+      track("photo_reported", { album: code, reason });
+      uploadStatus.classList.remove("upload-error");
+      uploadStatus.textContent = "Thanks, the host will take a look.";
+      setTimeout(() => (uploadStatus.textContent = ""), 4000);
     } catch (err) {
-      console.error(err);
-      alert("Couldn't rename just now. Try again in a minute.");
+      console.error("report failed", err);
     }
   });
 }
+
+// ---------- host: rename ----------
+
+async function doRename() {
+  const next = prompt("Album name:", eventData.name);
+  if (!next || !next.trim() || next.trim() === eventData.name) return;
+  const name = next.trim().slice(0, 60);
+  try {
+    await updateDoc(doc(db, "events", code), { name });
+    eventData.name = name;
+    document.getElementById("event-title").textContent = name;
+    document.title = `${name} · Snapjar`;
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't rename just now. Try again in a minute.");
+  }
+}
+
+// ---------- tabs, chips, settings ----------
+
+function switchTab(tab) {
+  for (const b of document.querySelectorAll(".tabbar-btn")) b.classList.toggle("active", b.dataset.tab === tab);
+  for (const p of document.querySelectorAll(".tab-panel")) p.hidden = p.id !== `tab-${tab}`;
+  if (tab === "messages") clearMsgDot();
+  window.scrollTo({ top: 0 });
+}
+
+function setupTabs() {
+  for (const b of document.querySelectorAll(".tabbar-btn")) {
+    b.addEventListener("click", () => switchTab(b.dataset.tab));
+  }
+  for (const chip of document.querySelectorAll(".chip")) {
+    chip.addEventListener("click", () => {
+      for (const c of document.querySelectorAll(".chip")) c.classList.remove("active");
+      chip.classList.add("active");
+      activeFilter = chip.dataset.filter;
+      guestNameFilter = null;
+      renderGallery();
+    });
+  }
+}
+
+function setupSettingsTab() {
+  document.getElementById("set-share").addEventListener("click", openShare);
+  document.getElementById("set-download").addEventListener("click", () => {
+    if (!eventData.paid) { openLimitModal("download"); return; }
+    downloadMany([...photoCache], `snapjar-${safeName(eventData.name)}.zip`);
+  });
+  const rename = document.getElementById("set-rename");
+  if (isHost) { rename.hidden = false; rename.addEventListener("click", doRename); }
+}
+
+// ---------- messages (guestbook) ----------
+
+let msgCache = [];
+let msgSeeded = false;
+
+function isOnMessagesTab() {
+  return !document.getElementById("tab-messages").hidden;
+}
+
+function clearMsgDot() { document.getElementById("msg-dot").hidden = true; }
+
+function watchMessages() {
+  const q = query(collection(db, "events", code, "messages"), orderBy("createdAt", "asc"));
+  onSnapshot(q, (snap) => {
+    let hasNewFromOthers = false;
+    for (const change of snap.docChanges()) {
+      if (change.type === "added" && msgSeeded && change.doc.data().authorUid !== currentUser.uid) {
+        hasNewFromOthers = true;
+      }
+    }
+    msgCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    msgSeeded = true;
+    renderMessages();
+    if (hasNewFromOthers && !isOnMessagesTab()) document.getElementById("msg-dot").hidden = false;
+  });
+}
+
+function renderMessages() {
+  const list = document.getElementById("msg-list");
+  document.getElementById("msg-empty").style.display = msgCache.length ? "none" : "block";
+  list.textContent = "";
+
+  for (const m of msgCache) {
+    const mine = m.authorUid === currentUser.uid;
+    const row = document.createElement("div");
+    row.className = "msg" + (mine ? " mine" : "");
+
+    const av = document.createElement("span");
+    av.className = "msg-av";
+    av.textContent = m.authorName ? m.authorName.trim()[0].toUpperCase() : "?";
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    const who = document.createElement("span");
+    who.className = "msg-who";
+    who.textContent = m.authorName || "Guest";
+    const txt = document.createElement("span");
+    txt.className = "msg-text";
+    txt.textContent = m.text;
+    bubble.append(who, txt);
+
+    if (isHost || mine) {
+      const del = document.createElement("button");
+      del.className = "msg-del";
+      del.type = "button";
+      del.innerHTML = "&times;";
+      del.title = "Delete";
+      del.addEventListener("click", async () => {
+        try { await deleteDoc(doc(db, "events", code, "messages", m.id)); }
+        catch (err) { console.error(err); }
+      });
+      bubble.appendChild(del);
+    }
+
+    if (mine) row.append(bubble, av);
+    else row.append(av, bubble);
+    list.appendChild(row);
+  }
+  list.scrollTop = list.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById("msg-input");
+  const text = input.value.trim().slice(0, 500);
+  if (!text) return;
+  input.value = "";
+  try {
+    await addDoc(collection(db, "events", code, "messages"), {
+      text,
+      authorName: guestNameInput.value.trim().slice(0, 30) || null,
+      authorUid: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+    track("message_sent", { album: code });
+  } catch (err) {
+    console.error("message failed", err);
+    input.value = text;
+    alert("Message didn't send. Try again in a second.");
+  }
+}
+
+document.getElementById("msg-send").addEventListener("click", sendMessage);
+document.getElementById("msg-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
+});
 
 // ---------- share modal ----------
 
@@ -643,9 +972,11 @@ function albumLink() {
 
 function openShare() {
   const url = albumLink();
+  // The QR carries the scan marker; the copyable link stays clean so shared
+  // links aren't miscounted as scans.
   document.getElementById("share-qr").src =
     "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" +
-    encodeURIComponent(url);
+    encodeURIComponent(url + "&s=qr");
   document.getElementById("share-caption").textContent = eventData.name;
   document.getElementById("share-domain").textContent = location.host;
   document.getElementById("share-url").value = url;

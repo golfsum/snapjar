@@ -92,7 +92,8 @@ function showSuccess(code, eventName) {
   document.getElementById("open-album-btn").href = `/event?c=${code}`;
 
   const qr = document.getElementById("qr-img");
-  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" + encodeURIComponent(url);
+  // Scan marker in the QR so the dashboard can tell scans from link shares.
+  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=2&color=211c15&bgcolor=ffffff&data=" + encodeURIComponent(url + "&s=qr");
 
   // Every printed table card quietly advertises the product
   document.getElementById("qr-domain").textContent = location.host;
