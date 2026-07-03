@@ -17,8 +17,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); -webk
   background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20;
 }
-.tm-logo { font-weight: 800; font-size: 1.15rem; text-decoration: none; color: var(--ink); }
-.tm-logo span { color: var(--accent); }
+.tm-logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--ink); letter-spacing: -0.03em; }
+.tm-logo .logo-mark { height: 26px; width: auto; }
+.tm-logo .logo-txt i { font-style: normal; background: linear-gradient(90deg,#2f6bed,#7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .grow { flex: 1; }
 .tm-btn {
   font-family: var(--font); font-size: 0.9rem; font-weight: 600; cursor: pointer;

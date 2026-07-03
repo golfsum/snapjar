@@ -54,15 +54,17 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .side-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   font-weight: 800;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
   padding: 4px 6px;
 }
-.side-brand .jar {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: var(--accent); color: #fff;
-  display: grid; place-items: center; font-size: 1.05rem;
+.side-brand .logo-mark { height: 30px; width: auto; }
+.side-brand .logo-txt i {
+  font-style: normal;
+  background: linear-gradient(90deg, #2f6bed, #7c3aed);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
 .add-btn {

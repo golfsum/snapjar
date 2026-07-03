@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="sj" x1="12" y1="6" x2="54" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2f6bed"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <!-- lid -->
+  <rect x="21" y="4.5" width="22" height="8" rx="3" fill="url(#sj)"/>
+  <rect x="23" y="12" width="18" height="4.5" rx="1.5" fill="url(#sj)"/>
+  <!-- jar body -->
+  <rect x="14.5" y="15.5" width="35" height="43.5" rx="9" stroke="url(#sj)" stroke-width="3"/>
+  <!-- QR modules -->
+  <g fill="#1f2a44">
+    <rect x="20" y="21" width="7" height="7" rx="1.2"/>
+    <rect x="37" y="21" width="7" height="7" rx="1.2"/>
+    <rect x="30.5" y="21" width="3" height="3"/>
+    <rect x="30.5" y="27.5" width="3" height="3"/>
+    <rect x="20" y="31.5" width="3" height="3"/>
+    <rect x="24" y="31.5" width="3" height="3"/>
+    <rect x="41" y="31.5" width="3" height="3"/>
+    <rect x="37" y="31.5" width="3" height="3"/>
+  </g>
+  <rect x="22.4" y="23.4" width="2.2" height="2.2" fill="#fff"/>
+  <rect x="39.4" y="23.4" width="2.2" height="2.2" fill="#fff"/>
+  <!-- camera lens -->
+  <circle cx="32" cy="45" r="9" fill="url(#sj)"/>
+  <circle cx="32" cy="45" r="4.4" fill="#e7eefc"/>
+  <circle cx="29.6" cy="42.6" r="1.5" fill="#fff"/>
+</svg>

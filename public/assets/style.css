@@ -49,12 +49,27 @@ a { color: inherit; }
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
   text-decoration: none;
+  color: var(--ink);
+}
+.logo-mark { height: 30px; width: auto; display: block; }
+.logo-txt { line-height: 1; }
+.logo-txt i {
+  font-style: normal;
+  background: linear-gradient(90deg, #2f6bed, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+/* legacy dot logo (footers still use it until swapped) */
 .logo-dot { color: var(--accent); }
 
 .nav-links {
