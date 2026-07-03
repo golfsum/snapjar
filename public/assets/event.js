@@ -63,7 +63,7 @@ async function init() {
     countView();
 
     loadingState.style.display = "none";
-    albumView.style.display = "block";
+    albumView.style.display = "grid";
     document.getElementById("tabbar").style.display = "flex";
 
     setupTabs();
