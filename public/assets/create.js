@@ -90,6 +90,7 @@ function showSuccess(code, eventName) {
   document.getElementById("qr-caption").textContent = eventName;
   document.getElementById("share-link").value = url;
   document.getElementById("open-album-btn").href = `/event?c=${code}`;
+  document.getElementById("design-card-btn").href = `/design?c=${code}`;
 
   const qr = document.getElementById("qr-img");
   // Scan marker in the QR so the dashboard can tell scans from link shares.

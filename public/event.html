@@ -169,10 +169,15 @@
         <section class="tab-panel" id="tab-settings" hidden>
           <h2 class="tab-title">Settings</h2>
           <div class="set-list">
-            <div class="set-field">
-              <label for="guest-name">Your name (shown on your photos)</label>
-              <input type="text" id="guest-name" placeholder="Add your name" maxlength="30">
-            </div>
+            <button class="set-row profile-row" id="open-profile" type="button">
+              <span class="pf-mini" id="pf-mini">?</span>
+              <span class="pf-row-text">
+                <span class="pf-row-name" id="pf-row-name">Set up your profile</span>
+                <span class="pf-row-sub" id="pf-row-sub">Your name and icon on everything you add</span>
+              </span>
+              <span class="chev">&#8250;</span>
+            </button>
+            <input type="text" id="guest-name" maxlength="30" hidden>
             <button class="set-row" id="set-share" type="button"><span>Share album</span><span class="chev">&#8250;</span></button>
             <button class="set-row" id="set-download" type="button"><span>Download all photos</span><span class="chev">&#8250;</span></button>
             <a class="set-row" id="set-tables" href="#"><span>Table QR manager <span class="pro-tag">Pro</span></span><span class="chev">&#8250;</span></a>
@@ -281,6 +286,48 @@
     </div>
     <img id="lb-img" alt="Event photo">
     <video id="lb-video" controls playsinline hidden></video>
+  </div>
+
+  <div class="lightbox" id="profile-modal">
+    <div class="share-panel profile-panel">
+      <button class="share-x" id="profile-close" type="button" aria-label="Close">&times;</button>
+      <h2 class="share-title">Your profile</h2>
+      <p class="profile-intro">Set a name and an icon. It shows on every photo, message, and moment you add.</p>
+
+      <div class="pf-preview-wrap">
+        <div class="pf-preview" id="pf-preview" aria-label="Avatar preview">
+          <span class="pf-preview-txt" id="pf-preview-txt">?</span>
+          <img class="pf-preview-img" id="pf-preview-img" alt="" hidden>
+        </div>
+        <p class="pf-drag-hint" id="pf-drag-hint" hidden>Drag the photo to place it in the circle</p>
+      </div>
+
+      <div class="pf-block">
+        <label class="pf-label">Pick an icon</label>
+        <div class="pf-emojis" id="pf-emojis"></div>
+      </div>
+
+      <div class="pf-block">
+        <label class="pf-label">Or use a photo</label>
+        <div class="pf-photo-row">
+          <button class="btn btn-small btn-outline" id="pf-upload" type="button">Upload a photo</button>
+          <button class="btn btn-small btn-outline" id="pf-clear-photo" type="button" hidden>Remove photo</button>
+        </div>
+        <input type="file" id="pf-file" accept="image/*" hidden>
+      </div>
+
+      <div class="pf-block">
+        <label class="pf-label" for="pf-name">Your name</label>
+        <input class="pf-input" type="text" id="pf-name" maxlength="30" placeholder="e.g. Sam">
+      </div>
+
+      <div class="pf-block">
+        <label class="pf-label" for="pf-bio">A little about you <span class="pf-optional">optional</span></label>
+        <input class="pf-input" type="text" id="pf-bio" maxlength="60" placeholder="e.g. Bride's cousin, Table 4">
+      </div>
+
+      <button class="btn pf-save" id="pf-save" type="button">Save profile</button>
+    </div>
   </div>
 
   <div class="lightbox" id="report-modal">

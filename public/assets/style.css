@@ -618,8 +618,8 @@ a { color: inherit; }
 .success-upsell {
   margin-top: 28px;
   padding: 20px 22px;
-  background: #fdf0e7;
-  border: 1px solid #efc9ae;
+  background: #eef4ff;
+  border: 1px solid #d4e2fb;
   border-radius: var(--radius);
 }
 
@@ -654,7 +654,7 @@ a { color: inherit; }
   background: var(--line);
 }
 
-.danger-card { margin-top: 18px; border-color: #efc9ae; }
+.danger-card { margin-top: 18px; border-color: #f3c7c7; }
 
 .danger-btn:hover { border-color: var(--accent-deep); color: var(--accent-deep); background: transparent; }
 
@@ -1201,8 +1201,8 @@ a { color: inherit; }
 .host-bar a { color: #f2b880; font-weight: 600; }
 
 .limit-note {
-  background: #fdf0e7;
-  border: 1px solid #efc9ae;
+  background: #eef4ff;
+  border: 1px solid #d4e2fb;
   border-radius: 10px;
   padding: 14px 18px;
   font-size: 0.92rem;

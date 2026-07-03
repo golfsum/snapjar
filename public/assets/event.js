@@ -32,10 +32,78 @@ let currentUser = null;
 let isHost = false;
 let photoCache = new Map();
 
-guestNameInput.value = localStorage.getItem("snapjar_guest_name") || "";
-guestNameInput.addEventListener("change", () => {
-  localStorage.setItem("snapjar_guest_name", guestNameInput.value.trim());
-});
+// ---------- guest profile (name + avatar, per device) ----------
+// The profile lives on the device. The avatar (emoji or a photo) is copied
+// onto everything you add, so other people see it too.
+const PROFILE_KEY = "snapjar_profile";
+let profile = loadProfile();
+
+function loadProfile() {
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}") || {}; } catch { p = {}; }
+  if (!p.name) { const old = localStorage.getItem("snapjar_guest_name"); if (old) p.name = old; }
+  return p;
+}
+
+function saveProfileLocal() {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch { /* private mode */ }
+  try { localStorage.setItem("snapjar_guest_name", (profile.name || "")); } catch { /* ignore */ }
+}
+
+// The avatar to stamp on my uploads and messages right now.
+function myAvatar() {
+  return {
+    emoji: profile.kind === "emoji" ? profile.emoji : null,
+    photo: profile.kind === "photo" ? profile.photo : null,
+    name: profile.name || null
+  };
+}
+
+// Paint any avatar circle: a photo, an emoji, or a fallback initial.
+function paintAvatar(el, { photo, emoji, name } = {}) {
+  if (!el) return;
+  el.classList.remove("has-img", "is-emoji");
+  el.style.backgroundImage = "";
+  if (photo) {
+    el.style.backgroundImage = `url("${photo}")`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.classList.add("has-img");
+    el.textContent = "";
+  } else if (emoji) {
+    el.textContent = emoji;
+    el.classList.add("is-emoji");
+  } else {
+    el.textContent = name && name.trim() ? name.trim()[0].toUpperCase() : "?";
+  }
+}
+
+// Same avatar logic, as an HTML string for the .cav contributor chips.
+function avatarInlineHtml(name) {
+  const a = avatarForName(name);
+  if (a.photo) return `<span class="cav has-img" style="background-image:url('${a.photo}')"></span>`;
+  if (a.emoji) return `<span class="cav is-emoji">${a.emoji}</span>`;
+  return `<span class="cav">${name ? escapeMoment(name.trim()[0].toUpperCase()) : "?"}</span>`;
+}
+
+// The avatar a given guest is showing, read off their most recent photo so
+// everyone sees the same icon. Falls back to my live profile for my own name.
+function avatarForName(name) {
+  let best = null, bestTs = -1;
+  for (const d of photoCache.values()) {
+    if ((d.uploaderName || "") !== (name || "")) continue;
+    if (!(d.uploaderEmoji || d.uploaderPhoto)) continue;
+    const ts = tsMillis(d.createdAt);
+    if (ts >= bestTs) { bestTs = ts; best = d; }
+  }
+  if (!best && (name || "") === (guestNameInput.value.trim() || "")) {
+    const m = myAvatar();
+    if (m.emoji || m.photo) return { emoji: m.emoji, photo: m.photo };
+  }
+  return best ? { emoji: best.uploaderEmoji || null, photo: best.uploaderPhoto || null } : {};
+}
+
+guestNameInput.value = profile.name || "";
 
 init();
 
@@ -76,6 +144,8 @@ async function init() {
 
     setupTabs();
     setupSettingsTab();
+    setupProfileModal();
+    updateProfileRow();
     if (isHost) {
       const pencil = document.getElementById("rename-pencil");
       pencil.hidden = false;
@@ -144,12 +214,23 @@ function formatAlbumDate(ts) {
 
 function updateUserChips() {
   const signedIn = currentUser && !currentUser.isAnonymous;
-  const name = signedIn ? (currentUser.displayName || (currentUser.email || "").split("@")[0] || "You") : "Guest";
-  const mail = signedIn ? currentUser.email : "Not signed in";
-  const initial = name.trim()[0].toUpperCase();
-  for (const id of ["user-av-side", "user-av-top"]) { const el = document.getElementById(id); if (el) el.textContent = initial; }
+  const pname = (guestNameInput.value || "").trim();
+  const name = pname || (signedIn ? (currentUser.displayName || (currentUser.email || "").split("@")[0] || "You") : "Guest");
+  const sub = profile.bio || (signedIn ? currentUser.email : "Tap to set up your profile");
+  const av = { ...myAvatar(), name };
+  for (const id of ["user-av-side", "user-av-top"]) paintAvatar(document.getElementById(id), av);
   for (const id of ["user-name-side", "user-name-top"]) { const el = document.getElementById(id); if (el) el.textContent = name; }
-  const mailEl = document.getElementById("user-mail-side"); if (mailEl) mailEl.textContent = mail;
+  const mailEl = document.getElementById("user-mail-side"); if (mailEl) mailEl.textContent = sub;
+}
+
+// The Settings row that opens the profile editor: mirror the current avatar.
+function updateProfileRow() {
+  const name = (guestNameInput.value || "").trim();
+  paintAvatar(document.getElementById("pf-mini"), { ...myAvatar(), name });
+  const nameEl = document.getElementById("pf-row-name");
+  const subEl = document.getElementById("pf-row-sub");
+  if (nameEl) nameEl.textContent = name || "Set up your profile";
+  if (subEl) subEl.textContent = name ? (profile.bio || "Tap to edit your name and icon") : "Your name and icon on everything you add";
 }
 
 function atFreeLimit() {
@@ -238,7 +319,7 @@ function renderContributors() {
   const html = rows.length ? rows.map(([name, n], i) => {
     const label = name || "No name given";
     const crown = i === 0 ? " &#128081;" : "";
-    return `<div class="contrib-row"><span class="cav">${(name ? name.trim()[0] : "?").toUpperCase()}</span>` +
+    return `<div class="contrib-row">${avatarInlineHtml(name)}` +
       `<span class="cmain"><span class="cname">${escapeMoment(label)}${crown}</span><span class="csub">${n} photo${n === 1 ? "" : "s"}</span></span></div>`;
   }).join("") : `<div class="empty-line" style="color:var(--faint);padding:10px 2px">No contributors yet.</div>`;
   for (const id of ["rail-contrib", "an-contrib"]) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
@@ -415,7 +496,9 @@ function renderMoments() {
     row.className = "lm-item";
     const av = document.createElement("span");
     av.className = "lm-av";
-    if (m.thumbs[0]) av.style.backgroundImage = `url("${m.thumbs[0]}")`;
+    const mav = avatarForName(m.name);
+    if (mav.emoji || mav.photo) paintAvatar(av, { ...mav, name: m.name });
+    else if (m.thumbs[0]) { av.style.backgroundImage = `url("${m.thumbs[0]}")`; av.style.backgroundSize = "cover"; av.style.backgroundPosition = "center"; }
     else av.textContent = (m.name ? m.name.trim()[0] : "?").toUpperCase();
     const txt = document.createElement("span");
     txt.className = "lm-txt";
@@ -809,7 +892,7 @@ function renderGuests() {
     row.type = "button";
     const av = document.createElement("span");
     av.className = "guest-av";
-    av.textContent = name ? name.trim()[0].toUpperCase() : "?";
+    paintAvatar(av, { ...avatarForName(name), name });
     const main = document.createElement("span");
     main.className = "guest-main";
     main.innerHTML = `<span class="guest-name">${escapeMoment(name || "No name given")}</span>
@@ -982,6 +1065,7 @@ async function uploadOne(file) {
   const url = await getDownloadURL(storageRef);
 
   const uploaderName = guestNameInput.value.trim().slice(0, 30) || null;
+  const av = myAvatar();
 
   await addDoc(collection(db, "events", code, "photos"), {
     url,
@@ -989,6 +1073,8 @@ async function uploadOne(file) {
     type,
     uploaderName,
     uploaderUid: currentUser.uid,
+    uploaderEmoji: av.emoji || null,
+    uploaderPhoto: av.photo || null,
     createdAt: serverTimestamp()
   });
 
@@ -1187,6 +1273,188 @@ function setupSettingsTab() {
   if (isHost) { rename.hidden = false; rename.addEventListener("click", doRename); }
 }
 
+// ---------- profile editor ----------
+
+const PROFILE_EMOJIS = ["🎉","🥳","💍","🎂","🌸","🍾","⭐","❤️","😎","📸","🌟","🦋","🎈","🍰","👑","🥂"];
+
+// Editor working state, separate from the saved profile until you hit Save.
+let pfKind = null;        // "emoji" | "photo" | null
+let pfEmoji = null;
+let pfPhotoUrl = null;    // already-hosted avatar url
+let pfPendingImg = null;  // freshly picked <img>, not uploaded yet
+let pfObjX = 50, pfObjY = 50;
+
+function clampPct(v) { return Math.max(0, Math.min(100, v)); }
+
+function setupProfileModal() {
+  const modal = document.getElementById("profile-modal");
+
+  const emojiWrap = document.getElementById("pf-emojis");
+  emojiWrap.innerHTML = PROFILE_EMOJIS
+    .map((e) => `<button type="button" class="pf-emoji" data-e="${e}">${e}</button>`).join("");
+  emojiWrap.addEventListener("click", (ev) => {
+    const b = ev.target.closest(".pf-emoji");
+    if (!b) return;
+    pfKind = "emoji"; pfEmoji = b.dataset.e; pfPendingImg = null;
+    markEmojiSel(); renderPfPreview();
+  });
+
+  document.getElementById("open-profile").addEventListener("click", openProfile);
+  document.getElementById("profile-close").addEventListener("click", () => modal.classList.remove("open"));
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+
+  document.getElementById("pf-upload").addEventListener("click", () => document.getElementById("pf-file").click());
+  document.getElementById("pf-file").addEventListener("change", onPfFile);
+  document.getElementById("pf-clear-photo").addEventListener("click", () => {
+    pfPhotoUrl = null; pfPendingImg = null;
+    pfKind = pfEmoji ? "emoji" : null;
+    markEmojiSel(); renderPfPreview();
+  });
+  document.getElementById("pf-name").addEventListener("input", () => { if (pfKind !== "photo" && pfKind !== "emoji") renderPfPreview(); });
+  document.getElementById("pf-save").addEventListener("click", saveProfile);
+
+  setupPfDrag();
+}
+
+function markEmojiSel() {
+  for (const b of document.querySelectorAll(".pf-emoji")) {
+    b.classList.toggle("sel", pfKind === "emoji" && b.dataset.e === pfEmoji);
+  }
+}
+
+function openProfile() {
+  document.getElementById("pf-name").value = (guestNameInput.value || "").trim();
+  document.getElementById("pf-bio").value = profile.bio || "";
+  pfKind = profile.kind || null;
+  pfEmoji = profile.emoji || null;
+  pfPhotoUrl = profile.photo || null;
+  pfPendingImg = null;
+  pfObjX = typeof profile.posX === "number" ? profile.posX : 50;
+  pfObjY = typeof profile.posY === "number" ? profile.posY : 50;
+  markEmojiSel();
+  renderPfPreview();
+  document.getElementById("profile-modal").classList.add("open");
+}
+
+function renderPfPreview() {
+  const box = document.getElementById("pf-preview");
+  const txt = document.getElementById("pf-preview-txt");
+  const img = document.getElementById("pf-preview-img");
+  const hasPhoto = pfKind === "photo" && (pfPendingImg || pfPhotoUrl);
+
+  box.classList.toggle("has-photo", !!hasPhoto);
+  document.getElementById("pf-clear-photo").hidden = !hasPhoto;
+  document.getElementById("pf-drag-hint").hidden = !hasPhoto;
+
+  if (hasPhoto) {
+    txt.style.display = "none";
+    img.hidden = false;
+    img.src = pfPendingImg ? pfPendingImg.src : pfPhotoUrl;
+    img.style.objectPosition = `${pfObjX}% ${pfObjY}%`;
+  } else {
+    img.hidden = true; img.removeAttribute("src");
+    txt.style.display = "";
+    if (pfKind === "emoji" && pfEmoji) txt.textContent = pfEmoji;
+    else { const n = document.getElementById("pf-name").value.trim(); txt.textContent = n ? n[0].toUpperCase() : "?"; }
+  }
+}
+
+function onPfFile(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    pfPendingImg = img; pfKind = "photo"; pfObjX = 50; pfObjY = 50;
+    markEmojiSel(); renderPfPreview();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); alert("Couldn't read that image. Try another one."); };
+  img.src = url;
+}
+
+// Drag the photo around inside the circle to choose what shows.
+function setupPfDrag() {
+  const box = document.getElementById("pf-preview");
+  let dragging = false, lastX = 0, lastY = 0;
+  box.addEventListener("pointerdown", (e) => {
+    if (!box.classList.contains("has-photo")) return;
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    box.classList.add("dragging");
+    box.setPointerCapture?.(e.pointerId);
+  });
+  box.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    pfObjX = clampPct(pfObjX - ((e.clientX - lastX) / rect.width) * 100);
+    pfObjY = clampPct(pfObjY - ((e.clientY - lastY) / rect.height) * 100);
+    lastX = e.clientX; lastY = e.clientY;
+    document.getElementById("pf-preview-img").style.objectPosition = `${pfObjX}% ${pfObjY}%`;
+  });
+  const stop = () => { dragging = false; box.classList.remove("dragging"); };
+  box.addEventListener("pointerup", stop);
+  box.addEventListener("pointercancel", stop);
+}
+
+// Bake the visible circle to a square image and upload it once. A fresh
+// filename each time keeps it a create (storage rules forbid overwrites).
+async function uploadAvatar(img, objX, objY) {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const scale = Math.max(size / iw, size / ih);
+  const dw = iw * scale, dh = ih * scale;
+  ctx.drawImage(img, (size - dw) * (objX / 100), (size - dh) * (objY / 100), dw, dh);
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+  const path = `events/${code}/av_${crypto.randomUUID()}.jpg`;
+  const sref = ref(storage, path);
+  await uploadBytes(sref, blob, { contentType: "image/jpeg" });
+  return getDownloadURL(sref);
+}
+
+async function saveProfile() {
+  const btn = document.getElementById("pf-save");
+  const name = document.getElementById("pf-name").value.trim().slice(0, 30);
+  const bio = document.getElementById("pf-bio").value.trim().slice(0, 60);
+
+  btn.disabled = true; btn.textContent = "Saving...";
+  try {
+    if (pfKind === "photo" && pfPendingImg) {
+      pfPhotoUrl = await uploadAvatar(pfPendingImg, pfObjX, pfObjY);
+      pfPendingImg = null;
+    }
+
+    profile.name = name || null;
+    profile.bio = bio || null;
+    if (pfKind === "photo" && pfPhotoUrl) {
+      profile.kind = "photo"; profile.photo = pfPhotoUrl; profile.posX = pfObjX; profile.posY = pfObjY;
+    } else if (pfKind === "emoji" && pfEmoji) {
+      profile.kind = "emoji"; profile.emoji = pfEmoji; profile.photo = null;
+    } else {
+      profile.kind = null;
+    }
+    saveProfileLocal();
+
+    guestNameInput.value = name || "";
+    updateUserChips();
+    updateProfileRow();
+    renderGuests();
+    renderMoments();
+    renderContributors();
+    renderMessages();
+
+    document.getElementById("profile-modal").classList.remove("open");
+    track("profile_saved", { album: code, icon: profile.kind || "initial" });
+  } catch (err) {
+    console.error("profile save failed", err);
+    alert("Couldn't save your profile just now. Check your connection and try again.");
+  } finally {
+    btn.disabled = false; btn.textContent = "Save profile";
+  }
+}
+
 // ---------- messages (guestbook) ----------
 
 let msgCache = [];
@@ -1228,7 +1496,7 @@ function renderMessages() {
 
     const av = document.createElement("span");
     av.className = "msg-av";
-    av.textContent = m.authorName ? m.authorName.trim()[0].toUpperCase() : "?";
+    paintAvatar(av, { photo: m.authorPhoto || null, emoji: m.authorEmoji || null, name: m.authorName });
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
@@ -1266,10 +1534,13 @@ async function sendMessage() {
   if (!text) return;
   input.value = "";
   try {
+    const av = myAvatar();
     await addDoc(collection(db, "events", code, "messages"), {
       text,
       authorName: guestNameInput.value.trim().slice(0, 30) || null,
       authorUid: currentUser.uid,
+      authorEmoji: av.emoji || null,
+      authorPhoto: av.photo || null,
       createdAt: serverTimestamp()
     });
     track("message_sent", { album: code });
