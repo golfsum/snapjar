@@ -33,8 +33,13 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  const joined = JSON.parse(localStorage.getItem("snapjar_visited") || "[]")
+  let joined = JSON.parse(localStorage.getItem("snapjar_visited") || "[]")
     .filter((v) => !mine.some((m) => m.code === v.code));
+
+  // Drop albums that have been deleted, and forget them locally, so the list
+  // only shows albums that still exist.
+  mine = await keepExisting(mine);
+  joined = await keepExisting(joined);
 
   if (!mine.length && !joined.length) {
     document.getElementById("empty-state").style.display = "block";
@@ -43,6 +48,20 @@ onAuthStateChanged(auth, async (user) => {
   if (mine.length) renderSection("mine", mine, true);
   if (joined.length) renderSection("joined", joined, false);
 });
+
+async function keepExisting(list) {
+  const out = [];
+  for (const a of list) {
+    try {
+      const snap = await getDoc(doc(db, "events", a.code));
+      if (snap.exists()) out.push({ ...a, name: snap.data().name || a.name });
+      else forgetLocal(a.code);
+    } catch {
+      out.push(a); // offline: keep it rather than lose it
+    }
+  }
+  return out;
+}
 
 function renderSection(prefix, list, isMine) {
   document.getElementById(`${prefix}-section`).style.display = "block";
