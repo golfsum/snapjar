@@ -32,99 +32,196 @@
       <p>Double check the link, or ask the host to send it again.</p>
     </div>
 
-    <div id="album-view" style="display:none">
+    <div id="album-view" class="saas" style="display:none">
 
-      <header class="app-hero">
-        <div class="hero-avatar" id="hero-avatar"></div>
-        <div class="hero-info">
-          <h1 id="event-title"></h1>
-          <p class="hero-stats" id="event-meta"></p>
+      <!-- LEFT SIDEBAR -->
+      <aside class="side">
+        <div class="side-brand"><span class="jar">&#128247;</span> Snapjar</div>
+        <button class="add-btn" id="upload-btn" type="button">&#43; Add Photos</button>
+        <nav class="snav-list">
+          <button class="snav active" data-tab="album" type="button"><span class="ico">&#128444;</span> Album</button>
+          <button class="snav" data-tab="guests" type="button"><span class="ico">&#128101;</span> Guests</button>
+          <button class="snav" data-tab="messages" type="button"><span class="ico">&#128172;</span> Messages <span class="badge" id="msg-count-badge" hidden></span></button>
+          <button class="snav" data-tab="analytics" type="button"><span class="ico">&#128202;</span> Analytics</button>
+          <button class="snav" data-tab="settings" type="button"><span class="ico">&#9881;</span> Settings</button>
+        </nav>
+        <div class="side-spacer"></div>
+        <div class="storage-card">
+          <div class="st-label">Storage Used</div>
+          <div class="st-num" id="storage-num">0 MB <small>of 50 GB</small></div>
+          <div class="st-bar"><i id="storage-bar" style="width:0%"></i></div>
+          <div class="st-pct" id="storage-pct">0%</div>
+          <a class="st-upgrade" id="st-upgrade" href="#" target="_blank" rel="noopener">Upgrade Plan</a>
         </div>
-        <button class="hero-icon" id="share-btn" type="button" aria-label="Share album">&#8593;</button>
-      </header>
+        <a class="user-chip" href="/settings">
+          <span class="user-av" id="user-av-side">G</span>
+          <span class="user-meta">
+            <span class="user-name" id="user-name-side">Guest</span>
+            <span class="user-mail" id="user-mail-side">Not signed in</span>
+          </span>
+        </a>
+      </aside>
 
-      <a class="guest-upgrade-banner" id="guest-upgrade" href="#" target="_blank" rel="noopener" style="display:none">
-        <span id="guest-upgrade-link">Unlock unlimited photos for this album, $19</span>
-      </a>
-
-      <!-- ALBUM TAB -->
-      <section class="tab-panel" id="tab-album">
-
-        <div class="live-moments" id="live-moments" style="display:none">
-          <div class="lm-head"><span class="lm-dot"></span> Live moments</div>
-          <div class="lm-list" id="lm-list"></div>
-        </div>
-
-        <div class="limit-note" id="limit-note" style="display:none">
-          This free album is full (25 photos). Unlock unlimited photos for $19, one time.
-          <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
-        </div>
-
-        <input type="file" id="file-input" accept="image/*" multiple hidden>
-        <p class="upload-status" id="upload-status"></p>
-
-        <div class="chips" id="chips">
-          <button class="chip active" data-filter="all" type="button">All</button>
-          <button class="chip" data-filter="today" type="button">Today</button>
-          <button class="chip" data-filter="mine" type="button">Mine</button>
-        </div>
-
-        <div class="empty-gallery" id="empty-gallery" style="display:none">
-          <div class="big">&#128247;</div>
-          <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
+      <!-- CENTER -->
+      <div class="main">
+        <div class="topbar">
+          <button class="bell" type="button" aria-label="Activity"><span>&#128276;</span><span class="bdot"></span></button>
+          <a class="user-chip" href="/settings">
+            <span class="user-av" id="user-av-top">G</span>
+            <span class="user-meta"><span class="user-name" id="user-name-top">Guest</span></span>
+          </a>
         </div>
 
-        <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
-          <button class="mini-btn" id="download-all-btn" type="button">Download all</button>
-          <button class="mini-btn" id="select-btn" type="button" style="display:none">Select</button>
-        </div>
+        <!-- ALBUM TAB -->
+        <section class="tab-panel" id="tab-album">
 
-        <div id="gallery"></div>
-      </section>
+          <header class="album-head">
+            <div class="cover" id="hero-avatar"></div>
+            <div class="ahead-info">
+              <div class="ahead-title">
+                <h1 id="event-title"></h1>
+                <button class="edit-pencil" id="rename-pencil" type="button" hidden aria-label="Rename">&#9998;</button>
+              </div>
+              <p class="ahead-sub" id="album-sub"></p>
+              <div class="ahead-stats" id="event-meta"></div>
+            </div>
+            <div class="astack" id="astack"></div>
+            <div class="ahead-actions">
+              <button class="btn" id="share-btn" type="button">&#8593; Share</button>
+            </div>
+          </header>
 
-      <!-- GUESTS TAB -->
-      <section class="tab-panel" id="tab-guests" hidden>
-        <h2 class="tab-title" id="guests-count">Guests</h2>
-        <div class="rowlist" id="guests-list"></div>
-      </section>
+          <a class="guest-upgrade-banner" id="guest-upgrade" href="#" target="_blank" rel="noopener" style="display:none">
+            <span id="guest-upgrade-link">Unlock unlimited photos for this album, $19</span>
+          </a>
 
-      <!-- MESSAGES TAB -->
-      <section class="tab-panel" id="tab-messages" hidden>
-        <h2 class="tab-title">Messages</h2>
-        <div class="msg-list" id="msg-list"></div>
-        <div class="msg-empty" id="msg-empty" style="display:none">No messages yet. Say something nice.</div>
-        <div class="msg-compose">
-          <input type="text" id="msg-input" placeholder="Write a message..." maxlength="500">
-          <button class="btn" id="msg-send" type="button">Send</button>
-        </div>
-      </section>
-
-      <!-- SETTINGS TAB -->
-      <section class="tab-panel" id="tab-settings" hidden>
-        <h2 class="tab-title">Album</h2>
-        <div class="set-list">
-          <div class="set-field">
-            <label for="guest-name">Your name (shown on your photos)</label>
-            <input type="text" id="guest-name" placeholder="Add your name" maxlength="30">
+          <div class="live-moments" id="live-moments" style="display:none">
+            <div class="lm-head"><span class="lm-dot"></span> Live activity <span class="viewall" id="lm-viewall">View all</span></div>
+            <div class="lm-list" id="lm-list"></div>
           </div>
-          <button class="set-row" id="set-share" type="button"><span>Share album</span><span class="chev">&#8250;</span></button>
-          <button class="set-row" id="set-download" type="button"><span>Download all photos</span><span class="chev">&#8250;</span></button>
-          <button class="set-row" id="set-rename" type="button" hidden><span>Rename album</span><span class="chev">&#8250;</span></button>
-          <a class="set-row" id="set-upgrade" href="#" target="_blank" rel="noopener" hidden><span>Unlock unlimited photos, $19</span><span class="chev">&#8250;</span></a>
-          <span class="set-row set-badge" id="set-paid" hidden><span>Party album, unlimited photos</span><span>&#10003;</span></span>
-          <a class="set-row" href="/albums"><span>My albums</span><span class="chev">&#8250;</span></a>
-          <a class="set-row" href="/settings"><span>Account settings</span><span class="chev">&#8250;</span></a>
+
+          <div class="limit-note" id="limit-note" style="display:none">
+            This free album is full (25 photos). Unlock unlimited photos for $19, one time.
+            <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
+          </div>
+
+          <input type="file" id="file-input" accept="image/*" multiple hidden>
+          <p class="upload-status" id="upload-status"></p>
+
+          <div class="filterbar">
+            <div class="chips" id="chips">
+              <button class="chip active" data-filter="all" type="button">All</button>
+              <button class="chip" data-filter="photos" type="button">Photos</button>
+              <button class="chip" data-filter="videos" type="button">Videos</button>
+              <button class="chip" data-filter="favorites" type="button">Favorites</button>
+              <button class="chip" data-filter="mine" type="button">Mine</button>
+            </div>
+            <div class="filter-spacer"></div>
+            <div class="search-box"><input type="text" id="photo-search" placeholder="Search photos..."></div>
+            <select class="sort-select" id="sort-select">
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+            </select>
+          </div>
+
+          <div class="empty-gallery" id="empty-gallery" style="display:none">
+            <div class="big">&#128247;</div>
+            <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
+          </div>
+
+          <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
+            <button class="mini-btn" id="download-all-btn" type="button">Download all</button>
+            <button class="mini-btn" id="select-btn" type="button" style="display:none">Select</button>
+          </div>
+
+          <div id="gallery"></div>
+        </section>
+
+        <!-- GUESTS TAB -->
+        <section class="tab-panel" id="tab-guests" hidden>
+          <h2 class="tab-title" id="guests-count">Guests</h2>
+          <div class="rowlist" id="guests-list"></div>
+        </section>
+
+        <!-- MESSAGES TAB -->
+        <section class="tab-panel" id="tab-messages" hidden>
+          <h2 class="tab-title">Messages</h2>
+          <div class="msg-list" id="msg-list"></div>
+          <div class="msg-empty" id="msg-empty" style="display:none">No messages yet. Say something nice.</div>
+          <div class="msg-compose">
+            <input type="text" id="msg-input" placeholder="Write a message..." maxlength="500">
+            <button class="btn" id="msg-send" type="button">Send</button>
+          </div>
+        </section>
+
+        <!-- ANALYTICS TAB (stats + contributors, especially for mobile) -->
+        <section class="tab-panel" id="tab-analytics" hidden>
+          <h2 class="tab-title">Analytics</h2>
+          <div class="card stats-card">
+            <h3>Album Stats</h3>
+            <div class="stat-grid" id="an-stats"></div>
+          </div>
+          <div class="card contrib-card" style="margin-top:16px">
+            <h3>Top Contributors</h3>
+            <div id="an-contrib"></div>
+          </div>
+        </section>
+
+        <!-- SETTINGS TAB -->
+        <section class="tab-panel" id="tab-settings" hidden>
+          <h2 class="tab-title">Settings</h2>
+          <div class="set-list">
+            <div class="set-field">
+              <label for="guest-name">Your name (shown on your photos)</label>
+              <input type="text" id="guest-name" placeholder="Add your name" maxlength="30">
+            </div>
+            <button class="set-row" id="set-share" type="button"><span>Share album</span><span class="chev">&#8250;</span></button>
+            <button class="set-row" id="set-download" type="button"><span>Download all photos</span><span class="chev">&#8250;</span></button>
+            <button class="set-row" id="set-rename" type="button" hidden><span>Rename album</span><span class="chev">&#8250;</span></button>
+            <a class="set-row" id="set-upgrade" href="#" target="_blank" rel="noopener" hidden><span>Unlock unlimited photos, $19</span><span class="chev">&#8250;</span></a>
+            <span class="set-row set-badge" id="set-paid" hidden><span>Party album, unlimited photos</span><span>&#10003;</span></span>
+            <a class="set-row" href="/albums"><span>My albums</span><span class="chev">&#8250;</span></a>
+            <a class="set-row" href="/settings"><span>Account settings</span><span class="chev">&#8250;</span></a>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT RAIL -->
+      <aside class="rail" id="rail">
+        <div class="card share-card">
+          <h3>Share Album</h3>
+          <img class="qr-card-img" id="rail-qr" alt="Album QR code">
+          <p class="qr-cap">Guests can scan this QR code to instantly join the album.</p>
+          <div class="qr-link-row">
+            <input type="text" id="rail-link" readonly>
+            <button id="rail-copy" type="button">Copy</button>
+          </div>
+          <div class="qr-actions">
+            <button id="rail-download-qr" type="button"><span class="qa-ico">&#11015;</span> Download QR</button>
+            <button id="rail-print" type="button"><span class="qa-ico">&#128424;</span> Print Sign</button>
+            <button id="rail-sharelink" type="button"><span class="qa-ico">&#128279;</span> Share Link</button>
+          </div>
         </div>
-        <p class="set-foot">snapjar<span style="color:var(--accent)">.</span></p>
-      </section>
+
+        <div class="card stats-card">
+          <h3>Album Stats</h3>
+          <div class="stat-grid" id="rail-stats"></div>
+        </div>
+
+        <div class="card contrib-card">
+          <h3>Top Contributors</h3>
+          <div id="rail-contrib"></div>
+          <a class="contrib-viewall" id="rail-viewall">View all guests</a>
+        </div>
+      </aside>
 
     </div>
   </main>
 
-  <button class="fab" id="upload-btn" type="button" aria-label="Add photos" style="display:none">+</button>
+  <button class="fab" id="fab-add" type="button" aria-label="Add photos">&#43;</button>
 
   <nav class="tabbar" id="tabbar" style="display:none">
-    <button class="tabbar-btn active" data-tab="album" type="button"><span class="tb-ico">&#9635;</span><span>Album</span></button>
+    <button class="tabbar-btn active" data-tab="album" type="button"><span class="tb-ico">&#128444;</span><span>Album</span></button>
     <button class="tabbar-btn" data-tab="guests" type="button"><span class="tb-ico">&#128101;</span><span>Guests</span></button>
     <button class="tabbar-btn" data-tab="messages" type="button"><span class="tb-ico">&#128172;</span><span>Messages</span><span class="tb-dot" id="msg-dot" hidden></span></button>
     <button class="tabbar-btn" data-tab="settings" type="button"><span class="tb-ico">&#9881;</span><span>Settings</span></button>
@@ -173,6 +270,7 @@
 
   <div class="lightbox" id="lightbox">
     <div class="lightbox-actions">
+      <button id="lb-fav" type="button">&#9734; Favorite</button>
       <a id="lb-download" href="#" download target="_blank" rel="noopener">Save</a>
       <button id="lb-report" type="button">Report</button>
       <button id="lb-delete" type="button" style="display:none">Delete</button>

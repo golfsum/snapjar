@@ -52,18 +52,27 @@ async function init() {
 
     document.title = `${eventData.name} · Snapjar`;
     document.getElementById("event-title").textContent = eventData.name;
+    document.getElementById("album-sub").textContent =
+      `${formatAlbumDate(eventData.createdAt)} · Private Album`;
     updateHero();
+    updateUserChips();
+    setupRail();
 
     rememberVisit(code, eventData.name);
     countScanIfQr();
+    countView();
 
     loadingState.style.display = "none";
     albumView.style.display = "block";
     document.getElementById("tabbar").style.display = "flex";
-    document.getElementById("upload-btn").style.display = "grid";
 
     setupTabs();
     setupSettingsTab();
+    if (isHost) {
+      const pencil = document.getElementById("rename-pencil");
+      pencil.hidden = false;
+      pencil.addEventListener("click", doRename);
+    }
     if (location.hash === "#share") openShare();
 
     watchPhotos();
@@ -108,6 +117,33 @@ function bumpDownloads(n) {
   updateDoc(doc(db, "events", code), { downloadCount: increment(n) }).catch(() => {});
 }
 
+// Count a view once per browser session (so a reload isn't a new view).
+function countView() {
+  try {
+    const key = "snapjar_viewed_" + code;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch { /* ignore */ }
+  updateDoc(doc(db, "events", code), { viewCount: increment(1) }).catch(() => {});
+  eventData.viewCount = (eventData.viewCount || 0) + 1;
+}
+
+function formatAlbumDate(ts) {
+  const ms = tsMillis(ts);
+  if (!ms) return "New album";
+  return new Date(ms).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+}
+
+function updateUserChips() {
+  const signedIn = currentUser && !currentUser.isAnonymous;
+  const name = signedIn ? (currentUser.displayName || (currentUser.email || "").split("@")[0] || "You") : "Guest";
+  const mail = signedIn ? currentUser.email : "Not signed in";
+  const initial = name.trim()[0].toUpperCase();
+  for (const id of ["user-av-side", "user-av-top"]) { const el = document.getElementById(id); if (el) el.textContent = initial; }
+  for (const id of ["user-name-side", "user-name-top"]) { const el = document.getElementById(id); if (el) el.textContent = name; }
+  const mailEl = document.getElementById("user-mail-side"); if (mailEl) mailEl.textContent = mail;
+}
+
 function atFreeLimit() {
   return !eventData.paid && (eventData.photoCount || 0) >= FREE_PHOTO_LIMIT;
 }
@@ -127,6 +163,114 @@ function refreshLimitUi() {
   setUpgrade.href = upgradeUrlFor(code);
   setUpgrade.hidden = eventData.paid;
   setPaid.hidden = !eventData.paid;
+
+  document.getElementById("st-upgrade").href = eventData.paid ? "/albums" : upgradeUrlFor(code);
+}
+
+// ---------- favorites (local, per device) ----------
+
+const favKey = "snapjar_fav_" + code;
+let favorites = new Set(JSON.parse(localStorage.getItem(favKey) || "[]"));
+
+function isFav(id) { return favorites.has(id); }
+function toggleFav(id) {
+  if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  localStorage.setItem(favKey, JSON.stringify([...favorites]));
+  updateChipCounts();
+  renderGallery();
+}
+
+// ---------- chip counts ----------
+
+function countFor(filter) {
+  let n = 0;
+  for (const [id, d] of photoCache) { if (photoPasses(filter, id, d)) n++; }
+  return n;
+}
+
+function updateChipCounts() {
+  const labels = { all: "All", photos: "Photos", videos: "Videos", favorites: "Favorites", mine: "Mine" };
+  for (const chip of document.querySelectorAll(".chip")) {
+    const f = chip.dataset.filter;
+    const c = f === "videos" ? 0 : countFor(f);
+    chip.textContent = `${labels[f]} (${c})`;
+  }
+}
+
+// ---------- stats + contributors (rail and analytics tab) ----------
+
+function statCells() {
+  const photos = photoCache.size || eventData.photoCount || 0;
+  const mb = photos * 0.35;
+  const storage = mb < 1000 ? `${Math.round(mb)} MB` : `${(mb / 1024).toFixed(1)} GB`;
+  return [
+    { ico: "&#128065;", num: (eventData.viewCount || 0).toLocaleString(), lbl: "Total Views" },
+    { ico: "&#128247;", num: photos, lbl: "Photos" },
+    { ico: "&#128101;", num: guestCount(), lbl: "Guests" },
+    { ico: "&#128190;", num: storage, lbl: "Storage" }
+  ];
+}
+
+function renderStats() {
+  const html = statCells().map((c) =>
+    `<div class="stat-cell"><span class="sc-ico">${c.ico}</span><span><span class="sc-num">${c.num}</span><span class="sc-lbl">${c.lbl}</span></span></div>`).join("");
+  for (const id of ["rail-stats", "an-stats"]) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+}
+
+function contributorRows() {
+  const map = new Map();
+  for (const d of photoCache.values()) {
+    const key = d.uploaderName || "";
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+}
+
+function renderContributors() {
+  const rows = contributorRows();
+  const html = rows.length ? rows.map(([name, n], i) => {
+    const label = name || "No name given";
+    const crown = i === 0 ? " &#128081;" : "";
+    return `<div class="contrib-row"><span class="cav">${(name ? name.trim()[0] : "?").toUpperCase()}</span>` +
+      `<span class="cmain"><span class="cname">${escapeMoment(label)}${crown}</span><span class="csub">${n} photo${n === 1 ? "" : "s"}</span></span></div>`;
+  }).join("") : `<div class="empty-line" style="color:var(--faint);padding:10px 2px">No contributors yet.</div>`;
+  for (const id of ["rail-contrib", "an-contrib"]) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+}
+
+// ---------- share rail ----------
+
+function setupRail() {
+  const url = `${location.origin}/event?c=${code}`;
+  document.getElementById("rail-qr").src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=1&color=101828&bgcolor=ffffff&data=" +
+    encodeURIComponent(url + "&s=qr");
+  document.getElementById("rail-link").value = url;
+  document.getElementById("rail-copy").addEventListener("click", () => copyText(url, "rail-copy"));
+  document.getElementById("rail-sharelink").addEventListener("click", () => nativeShare(url));
+  document.getElementById("rail-download-qr").addEventListener("click", downloadQr);
+  document.getElementById("rail-print").addEventListener("click", () => { openShare(); setTimeout(() => window.print(), 300); });
+  document.getElementById("rail-viewall").addEventListener("click", () => switchTab("guests"));
+  document.getElementById("lm-viewall").addEventListener("click", () => switchTab("guests"));
+}
+
+async function copyText(text, btnId) {
+  try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+  const b = document.getElementById(btnId);
+  const old = b.textContent; b.textContent = "Copied!";
+  setTimeout(() => (b.textContent = old), 1500);
+}
+
+async function nativeShare(url) {
+  if (navigator.share) { try { await navigator.share({ title: eventData.name, url }); } catch { /* cancelled */ } }
+  else copyText(url, "rail-sharelink");
+}
+
+function downloadQr() {
+  const a = document.createElement("a");
+  a.href = document.getElementById("rail-qr").src;
+  a.download = `${safeName(eventData.name)}-qr.png`;
+  a.target = "_blank";
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 // ---------- live gallery ----------
@@ -145,36 +289,75 @@ function watchPhotos() {
     renderMoments();
     renderGuests();
     updateHero();
-    emptyGallery.style.display = photoCache.size ? "none" : "block";
+    updateChipCounts();
+    renderStats();
+    renderContributors();
+    emptyGallery.style.display = "none"; // filter/empty handled inside renderGallery
     // Keep the local count roughly in sync for the limit check
     eventData.photoCount = snap.size;
     refreshLimitUi();
   });
 }
 
-// Hero: "N Photos · N Guests" and a photo-based avatar, like the mockup.
-function updateHero() {
-  const photos = photoCache.size || eventData.photoCount || 0;
+// Distinct contributors (named + one bucket for the unnamed).
+function guestCount() {
   const names = new Set();
   let hasUnnamed = false;
-  let firstUrl = null;
   for (const d of photoCache.values()) {
     if (d.uploaderName) names.add(d.uploaderName); else hasUnnamed = true;
-    if (!firstUrl) firstUrl = d.url;
   }
-  const guests = names.size + (hasUnnamed ? 1 : 0);
+  return names.size + (hasUnnamed ? 1 : 0);
+}
 
-  const meta = document.getElementById("event-meta");
-  meta.innerHTML = `<b>${photos}</b> Photo${photos === 1 ? "" : "s"} &middot; <b>${guests}</b> Guest${guests === 1 ? "" : "s"}`;
+// Album header: cover image, "N Photos / N Guests / N Views", avatar stack.
+function updateHero() {
+  const photos = photoCache.size || eventData.photoCount || 0;
+  const guests = guestCount();
+  const views = eventData.viewCount || 0;
+  let firstUrl = null;
+  for (const d of photoCache.values()) { firstUrl = d.url; break; }
+
+  document.getElementById("event-meta").innerHTML =
+    `<span class="ahead-stat">&#128247; <b>${photos}</b> Photo${photos === 1 ? "" : "s"}</span>` +
+    `<span class="ahead-stat">&#128101; <b>${guests}</b> Guest${guests === 1 ? "" : "s"}</span>` +
+    `<span class="ahead-stat">&#128065; <b>${views.toLocaleString()}</b> View${views === 1 ? "" : "s"}</span>`;
 
   const av = document.getElementById("hero-avatar");
-  if (firstUrl) {
-    av.style.backgroundImage = `url("${firstUrl}")`;
-    av.textContent = "";
-  } else {
-    av.style.backgroundImage = "";
-    av.textContent = (eventData.name || "?").trim()[0].toUpperCase();
+  if (firstUrl) { av.style.backgroundImage = `url("${firstUrl}")`; av.textContent = ""; }
+  else { av.style.backgroundImage = ""; av.textContent = (eventData.name || "?").trim()[0].toUpperCase(); }
+
+  renderAvatarStack();
+  updateStorage(photos);
+}
+
+function renderAvatarStack() {
+  const stack = document.getElementById("astack");
+  if (!stack) return;
+  const urls = [];
+  const seen = new Set();
+  for (const d of photoCache.values()) {
+    const k = d.uploaderName || d.uploaderUid;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    urls.push(d.url);
+    if (urls.length >= 3) break;
   }
+  const total = guestCount();
+  stack.innerHTML = urls.map((u) => `<span class="sa" style="background-image:url('${u}')"></span>`).join("") +
+    (total > urls.length ? `<span class="sa more">+${total - urls.length}</span>` : "");
+}
+
+function updateStorage(photos) {
+  const mb = photos * 0.35;
+  const numEl = document.getElementById("storage-num");
+  const barEl = document.getElementById("storage-bar");
+  const pctEl = document.getElementById("storage-pct");
+  if (!numEl) return;
+  const shown = mb < 1000 ? `${Math.round(mb)} MB` : `${(mb / 1024).toFixed(1)} GB`;
+  numEl.innerHTML = `${shown} <small>of 50 GB</small>`;
+  const pct = Math.min(100, (mb / 1024 / 50) * 100);
+  barEl.style.width = pct.toFixed(1) + "%";
+  pctEl.textContent = Math.max(1, Math.round(pct)) + "%";
 }
 
 // ---------- live moments ----------
@@ -199,7 +382,7 @@ function renderMoments() {
   const list = document.getElementById("lm-list");
 
   const photos = [...photoCache.values()]
-    .map((d) => ({ name: d.uploaderName || null, ts: tsMillis(d.createdAt) }))
+    .map((d) => ({ name: d.uploaderName || null, ts: tsMillis(d.createdAt), url: d.url }))
     .filter((p) => p.ts)
     .sort((a, b) => b.ts - a.ts);
 
@@ -210,9 +393,9 @@ function renderMoments() {
     const last = moments[moments.length - 1];
     if (last && last.name === p.name && last.ts - p.ts < 10 * 60 * 1000) {
       last.count++;
-      // keep the latest ts (already the first seen since sorted desc)
+      last.thumbs.push(p.url);
     } else {
-      moments.push({ name: p.name, count: 1, ts: p.ts });
+      moments.push({ name: p.name, count: 1, ts: p.ts, thumbs: [p.url] });
     }
     if (moments.length >= 4) break;
   }
@@ -225,14 +408,18 @@ function renderMoments() {
     row.className = "lm-item";
     const av = document.createElement("span");
     av.className = "lm-av";
-    av.textContent = (m.name ? m.name.trim()[0] : "?").toUpperCase();
+    if (m.thumbs[0]) av.style.backgroundImage = `url("${m.thumbs[0]}")`;
+    else av.textContent = (m.name ? m.name.trim()[0] : "?").toUpperCase();
     const txt = document.createElement("span");
     txt.className = "lm-txt";
-    txt.innerHTML = `<strong>${escapeMoment(who)}</strong> ${what}`;
-    const time = document.createElement("span");
-    time.className = "lm-time";
-    time.textContent = relTime(m.ts);
-    row.append(av, txt, time);
+    txt.innerHTML = `<strong>${escapeMoment(who)}</strong> ${what}<span class="lm-time">${relTime(m.ts)}</span>`;
+    row.append(av, txt);
+    if (m.thumbs.length > 1) {
+      const thumbs = document.createElement("span");
+      thumbs.className = "lm-thumbs";
+      thumbs.innerHTML = m.thumbs.slice(0, 3).map((u) => `<img src="${u}" loading="lazy" alt="">`).join("");
+      row.append(thumbs);
+    }
     list.appendChild(row);
   }
   strip.style.display = "block";
@@ -251,44 +438,67 @@ function tsMillis(t) {
 }
 
 let activeFilter = "all";
+let sortOrder = "new";
+let searchTerm = "";
 
-function passesFilter(data) {
-  if (activeFilter === "guest") return (data.uploaderName || "") === (guestNameFilter || "");
-  if (activeFilter === "mine") return data.uploaderUid === currentUser.uid;
-  if (activeFilter === "today") {
+// One source of truth for whether a photo shows under a given filter.
+function photoPasses(filter, id, data) {
+  if (filter === "videos") return false;                 // no video support yet
+  if (filter === "favorites") return favorites.has(id);
+  if (filter === "guest") return (data.uploaderName || "") === (guestNameFilter || "");
+  if (filter === "mine") return data.uploaderUid === currentUser.uid;
+  if (filter === "today") {
     const ms = tsMillis(data.createdAt);
     if (!ms) return false;
     const d = new Date(ms), now = new Date();
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   }
+  return true; // all, photos
+}
+
+function passesFilter(id, data) {
+  if (!photoPasses(activeFilter, id, data)) return false;
+  if (searchTerm) return (data.uploaderName || "").toLowerCase().includes(searchTerm);
   return true;
 }
+
+const EMPTY_STATES = {
+  videos: "No videos yet. Video upload is coming soon.",
+  favorites: "No favorites yet. Open a photo and tap the star to save it here.",
+  mine: "You haven't added any photos yet.",
+  today: "Nothing added today, yet.",
+  guest: "No photos from this guest."
+};
 
 // Photos are grouped by who added them, newest activity on top,
 // with the uploader's name labelled above their photos.
 function renderGallery() {
   const groups = new Map();
   for (const [id, data] of photoCache) {
-    if (!passesFilter(data)) continue;
+    if (!passesFilter(id, data)) continue;
     const key = data.uploaderName || "";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push([id, data]);
   }
 
+  const dir = sortOrder === "old" ? 1 : -1;
   const sorted = [...groups.entries()].map(([key, photos]) => {
-    photos.sort((a, b) => tsMillis(b[1].createdAt) - tsMillis(a[1].createdAt));
+    photos.sort((a, b) => dir * (tsMillis(b[1].createdAt) - tsMillis(a[1].createdAt)));
     return { key, photos, latest: tsMillis(photos[0][1].createdAt) };
-  }).sort((a, b) => b.latest - a.latest);
+  }).sort((a, b) => dir * (b.latest - a.latest));
 
   gallery.textContent = "";
 
-  if (!sorted.length && photoCache.size) {
-    const note = document.createElement("p");
-    note.className = "filter-empty";
-    note.textContent = activeFilter === "mine"
-      ? "You haven't added any photos yet."
-      : "Nothing here for this filter.";
-    gallery.appendChild(note);
+  if (!sorted.length) {
+    const box = document.createElement("div");
+    box.className = "empty-pic";
+    const msg = searchTerm ? "No photos match that name."
+      : (EMPTY_STATES[activeFilter] || "No photos yet. Tap Add Photos to start the album.");
+    box.innerHTML = `<div class="frame">&#128247;</div><p>${msg}</p>`;
+    gallery.appendChild(box);
+    document.getElementById("gallery-toolbar").style.display = photoCache.size ? "flex" : "none";
+    refreshSelectUi();
+    return;
   }
 
   for (const g of sorted) {
@@ -602,14 +812,16 @@ function showGuestPhotos(name) {
 
 // ---------- uploads ----------
 
-uploadBtn.addEventListener("click", () => {
+function onAddPhotos() {
   if (atFreeLimit()) {
     refreshLimitUi();
     openLimitModal();
     return;
   }
   fileInput.click();
-});
+}
+uploadBtn.addEventListener("click", onAddPhotos);
+document.getElementById("fab-add").addEventListener("click", onAddPhotos);
 
 // The paywall. Hosts get the pitch, guests get the explanation
 // (and a chance to be the hero).
@@ -779,8 +991,20 @@ function openLightbox(id) {
   lbImg.src = data.url;
   lbDownload.href = data.url;
   lbDelete.style.display = isHost || data.uploaderUid === currentUser.uid ? "inline-block" : "none";
+  updateFavBtn();
   lightbox.classList.add("open");
 }
+
+function updateFavBtn() {
+  const btn = document.getElementById("lb-fav");
+  btn.innerHTML = isFav(lightboxPhotoId) ? "&#9733; Favorited" : "&#9734; Favorite";
+}
+
+document.getElementById("lb-fav").addEventListener("click", () => {
+  if (!lightboxPhotoId) return;
+  toggleFav(lightboxPhotoId);
+  updateFavBtn();
+});
 
 function closeLightbox() {
   lightbox.classList.remove("open");
@@ -860,17 +1084,19 @@ async function doRename() {
 // ---------- tabs, chips, settings ----------
 
 function switchTab(tab) {
-  for (const b of document.querySelectorAll(".tabbar-btn")) b.classList.toggle("active", b.dataset.tab === tab);
+  for (const b of document.querySelectorAll(".tabbar-btn, .snav")) b.classList.toggle("active", b.dataset.tab === tab);
   for (const p of document.querySelectorAll(".tab-panel")) p.hidden = p.id !== `tab-${tab}`;
-  // The + button only makes sense on the Album tab.
-  document.getElementById("upload-btn").style.display = tab === "album" ? "grid" : "none";
+  // The right rail (share/stats) only belongs alongside the Album view.
+  const rail = document.getElementById("rail");
+  if (rail) rail.style.visibility = tab === "album" ? "visible" : "hidden";
   if (tab === "messages") clearMsgDot();
+  if (tab === "analytics") { renderStats(); renderContributors(); }
   window.scrollTo({ top: 0 });
 }
 
 function setupTabs() {
-  for (const b of document.querySelectorAll(".tabbar-btn")) {
-    b.addEventListener("click", () => switchTab(b.dataset.tab));
+  for (const b of document.querySelectorAll(".tabbar-btn, .snav")) {
+    if (b.dataset.tab) b.addEventListener("click", () => switchTab(b.dataset.tab));
   }
   for (const chip of document.querySelectorAll(".chip")) {
     chip.addEventListener("click", () => {
@@ -881,6 +1107,10 @@ function setupTabs() {
       renderGallery();
     });
   }
+  const search = document.getElementById("photo-search");
+  search.addEventListener("input", () => { searchTerm = search.value.trim().toLowerCase(); renderGallery(); });
+  const sort = document.getElementById("sort-select");
+  sort.addEventListener("change", () => { sortOrder = sort.value; renderGallery(); });
 }
 
 function setupSettingsTab() {
@@ -923,6 +1153,8 @@ function watchMessages() {
 function renderMessages() {
   const list = document.getElementById("msg-list");
   document.getElementById("msg-empty").style.display = msgCache.length ? "none" : "block";
+  const badge = document.getElementById("msg-count-badge");
+  if (badge) { badge.hidden = !msgCache.length; badge.textContent = msgCache.length; }
   list.textContent = "";
 
   for (const m of msgCache) {
@@ -1035,10 +1267,9 @@ document.getElementById("share-native").addEventListener("click", async () => {
   }
 });
 
-for (const id of ["header-upgrade", "upgrade-link", "guest-upgrade-link"]) {
-  document.getElementById(id).addEventListener("click", () => {
-    track("upgrade_click", { album: code, from: id });
-  });
+for (const id of ["upgrade-link", "guest-upgrade", "st-upgrade"]) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("click", () => track("upgrade_click", { album: code, from: id }));
 }
 
 lbDelete.addEventListener("click", async () => {

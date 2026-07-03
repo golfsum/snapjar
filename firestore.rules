@@ -48,6 +48,10 @@ service cloud.firestore {
           && request.resource.data.scanCount == resource.data.get('scanCount', 0) + 1
         )
         || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount'])
+          && request.resource.data.viewCount == resource.data.get('viewCount', 0) + 1
+        )
+        || (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadCount'])
           && request.resource.data.downloadCount > resource.data.get('downloadCount', 0)
         )
