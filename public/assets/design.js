@@ -287,14 +287,27 @@ document.getElementById("f-label").addEventListener("input", (e) => { const el =
 document.getElementById("f-sub").addEventListener("input", (e) => { const el = coreOf("sub"); if (el) { el.text = e.target.value; applyEl(el); } });
 
 // background
+
+// Fill the whole card with the photo, centered. The template's background
+// shorthand resets size to auto, so these three have to be set every time.
+function applyBgImage(src) {
+  bgImage = src;
+  canvas.style.backgroundImage = `url("${src}")`;
+  canvas.style.backgroundSize = "cover";
+  canvas.style.backgroundPosition = "center";
+  canvas.style.backgroundRepeat = "no-repeat";
+  document.getElementById("overlay-row").style.display = "flex";
+  applyFade();
+}
+
 document.getElementById("bg-color").addEventListener("input", (e) => { if (!bgImage) canvas.style.background = e.target.value; canvas.dataset.color = e.target.value; });
 document.getElementById("bg-photo-btn").addEventListener("click", () => document.getElementById("bg-file").click());
-document.getElementById("bg-file").addEventListener("change", (e) => {
+document.getElementById("bg-file").addEventListener("change", async (e) => {
   const file = e.target.files[0];
+  e.target.value = "";
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => { bgImage = reader.result; canvas.style.backgroundImage = `url("${bgImage}")`; document.getElementById("overlay-row").style.display = "flex"; applyFade(); };
-  reader.readAsDataURL(file);
+  try { applyBgImage(await fileToDataUrl(file)); }
+  catch { alert("Couldn't read that image. Try a JPG or PNG."); }
 });
 document.getElementById("bg-clear-btn").addEventListener("click", () => {
   bgImage = null;
@@ -349,13 +362,6 @@ async function addImageEl(file, x = 50, y = 50) {
   return el;
 }
 
-function setBackgroundFromSrc(src) {
-  bgImage = src;
-  canvas.style.backgroundImage = `url("${bgImage}")`;
-  document.getElementById("overlay-row").style.display = "flex";
-  applyFade();
-}
-
 document.getElementById("add-image-btn").addEventListener("click", () => document.getElementById("image-file").click());
 document.getElementById("image-file").addEventListener("change", async (e) => {
   for (const f of [...e.target.files]) if ((f.type || "").startsWith("image/")) await addImageEl(f);
@@ -363,9 +369,9 @@ document.getElementById("image-file").addEventListener("change", async (e) => {
 });
 
 // Selected image -> promote it to the card background.
-document.getElementById("make-bg-btn").addEventListener("click", async () => {
+document.getElementById("make-bg-btn").addEventListener("click", () => {
   if (!selected || selected.type !== "image") return;
-  setBackgroundFromSrc(selected.src);
+  applyBgImage(selected.src);
   selected.node.remove();
   els = els.filter((e) => e !== selected);
   deselect();
