@@ -65,6 +65,13 @@
       </section>
 
       <section class="side-card">
+        <h2>Pictures</h2>
+        <p class="section-help">Drop images anywhere on the card, or add one here. Drag to move, pull the blue dot to resize.</p>
+        <button class="pbtn" id="add-image-btn" type="button" style="margin-top:0">+ Add a picture</button>
+        <input type="file" id="image-file" accept="image/*" multiple hidden>
+      </section>
+
+      <section class="side-card">
         <h2>Additional Text</h2>
         <p class="section-help">Add extra lines like a date or venue.</p>
         <button class="pbtn" id="add-text-btn" type="button" style="margin-top:0">+ Add a text line</button>
@@ -107,6 +114,9 @@
             <button class="tg" id="tg-caps" type="button">AA</button>
           </div>
         </div>
+        <div id="image-only" style="display:none">
+          <button class="pbtn" id="make-bg-btn" type="button">Use as card background</button>
+        </div>
         <button class="pbtn danger-btn" id="del-el-btn" type="button">Delete this item</button>
       </section>
     </aside>
@@ -132,7 +142,7 @@
           </div>
         </div>
       </div>
-      <p class="stage-hint">Click any text to edit it. Drag to move, drag the blue dot to resize.</p>
+      <p class="stage-hint">Click any text to edit it. Drag to move, drag the blue dot to resize. Drop pictures right onto the card.</p>
     </div>
 
   </div>

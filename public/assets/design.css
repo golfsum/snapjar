@@ -163,6 +163,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); -webk
 .el.text:hover { box-shadow: 0 0 0 1px rgba(47,107,237,0.35); }
 .el.qr { transform: translate(-50%, -50%); }
 .el.qr img { display: block; width: 100%; height: 100%; }
+.el.image { transform: translate(-50%, -50%); }
+.el.image img { display: block; width: 100%; height: auto; pointer-events: none; }
+.el.image:hover { box-shadow: 0 0 0 1px rgba(47,107,237,0.35); }
+
+.stage.drop-hover .card-canvas { box-shadow: 0 0 0 3px var(--accent), var(--shadow-card); }
 .el.selected { box-shadow: 0 0 0 1.5px var(--accent); }
 .el.text[contenteditable="true"] { cursor: text; box-shadow: 0 0 0 1.5px var(--accent); }
 .el .handle {

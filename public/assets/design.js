@@ -80,7 +80,7 @@ function applyEl(el) {
     if (node.firstChild?.nodeType !== 3 || node.textContent !== el.text) {
       if (document.activeElement !== node) node.textContent = el.text;
     }
-  } else if (el.type === "qr") {
+  } else if (el.type === "qr" || el.type === "image") {
     node.style.width = el.size + "%";
   }
 }
@@ -90,6 +90,12 @@ function makeNode(el) {
   node.className = "el " + el.type;
   if (el.type === "text") {
     node.textContent = el.text;
+  } else if (el.type === "image") {
+    const img = document.createElement("img");
+    img.alt = "";
+    img.draggable = false;
+    img.src = el.src;
+    node.appendChild(img);
   } else {
     const img = document.createElement("img");
     img.id = "qr-img";
@@ -131,7 +137,7 @@ function wireElement(el, handle) {
     const startX = e.clientX, startY = e.clientY;
     const ox = el.x, oy = el.y;
     let moved = false;
-    node.setPointerCapture(e.pointerId);
+    try { node.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ }
     const move = (ev) => {
       if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 3) moved = true;
       el.x = clamp(ox + ((ev.clientX - startX) / rect.width) * 100, 2, 98);
@@ -154,10 +160,11 @@ function wireElement(el, handle) {
     const rect = canvas.getBoundingClientRect();
     const startX = e.clientX;
     const oSize = el.size;
-    handle.setPointerCapture(e.pointerId);
+    try { handle.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ }
     const move = (ev) => {
       const deltaPct = ((ev.clientX - startX) / rect.width) * 100;
       if (el.type === "text") el.size = clamp(oSize + deltaPct * 0.6, 2, 60);
+      else if (el.type === "image") el.size = clamp(oSize + deltaPct, 6, 100);
       else el.size = clamp(oSize + deltaPct, 12, 90);
       applyEl(el);
       if (el === selected) syncControls();
@@ -221,7 +228,9 @@ function selectEl(el) {
   for (const e of els) e.node.classList.toggle("selected", e === el);
   elControls.classList.remove("hidden");
   document.getElementById("text-only").style.display = el.type === "text" ? "block" : "none";
-  document.getElementById("size-label").textContent = el.type === "text" ? "Font" : "QR size";
+  document.getElementById("image-only").style.display = el.type === "image" ? "block" : "none";
+  document.getElementById("size-label").textContent =
+    el.type === "text" ? "Font" : el.type === "image" ? "Image size" : "QR size";
   syncControls();
 }
 
@@ -234,8 +243,8 @@ function deselect() {
 function syncControls() {
   if (!selected) return;
   sizeRange.value = Math.round(selected.type === "text" ? selected.size * 4 : selected.size);
-  sizeRange.min = selected.type === "text" ? 8 : 12;
-  sizeRange.max = selected.type === "text" ? 240 : 90;
+  sizeRange.min = selected.type === "text" ? 8 : selected.type === "image" ? 6 : 12;
+  sizeRange.max = selected.type === "text" ? 240 : selected.type === "image" ? 100 : 90;
   if (selected.type === "text") {
     document.getElementById("text-color").value = toHex(selected.color);
     document.getElementById("font-select").value = selected.font;
@@ -303,6 +312,90 @@ function applyFade() {
 document.getElementById("add-text-btn").addEventListener("click", () => {
   const el = addTextEl({ text: "Your text", x: 50, y: 55, size: 6, color: "#333", font: "'Inter', sans-serif" });
   selectEl(el);
+});
+
+// ---------- images on the card (drag-drop or picker) ----------
+
+// Downscale to a reasonable data URL so the design stays light and the
+// PNG export doesn't choke on a 12 MB phone photo.
+function fileToDataUrl(file, maxEdge = 1600) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.naturalWidth * scale);
+      cv.height = Math.round(img.naturalHeight * scale);
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      // PNG keeps transparency (logos, florals); JPEG keeps photos small.
+      const isPng = (file.type || "").includes("png");
+      resolve(cv.toDataURL(isPng ? "image/png" : "image/jpeg", 0.88));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("unreadable image")); };
+    img.src = url;
+  });
+}
+
+async function addImageEl(file, x = 50, y = 50) {
+  let src;
+  try { src = await fileToDataUrl(file); }
+  catch { alert("Couldn't read that image. Try a JPG or PNG."); return null; }
+  const el = { type: "image", x, y, size: 34, src };
+  makeNode(el);
+  els.push(el);
+  selectEl(el);
+  return el;
+}
+
+function setBackgroundFromSrc(src) {
+  bgImage = src;
+  canvas.style.backgroundImage = `url("${bgImage}")`;
+  document.getElementById("overlay-row").style.display = "flex";
+  applyFade();
+}
+
+document.getElementById("add-image-btn").addEventListener("click", () => document.getElementById("image-file").click());
+document.getElementById("image-file").addEventListener("change", async (e) => {
+  for (const f of [...e.target.files]) if ((f.type || "").startsWith("image/")) await addImageEl(f);
+  e.target.value = "";
+});
+
+// Selected image -> promote it to the card background.
+document.getElementById("make-bg-btn").addEventListener("click", async () => {
+  if (!selected || selected.type !== "image") return;
+  setBackgroundFromSrc(selected.src);
+  selected.node.remove();
+  els = els.filter((e) => e !== selected);
+  deselect();
+});
+
+// Drop pictures straight onto the card. They land where you let go.
+const dropTargets = [stageEl, canvas];
+for (const t of dropTargets) {
+  t.addEventListener("dragover", (e) => {
+    if (![...e.dataTransfer.types].includes("Files")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    stageEl.classList.add("drop-hover");
+  });
+  t.addEventListener("dragleave", (e) => {
+    if (e.target === t) stageEl.classList.remove("drop-hover");
+  });
+}
+stageEl.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  stageEl.classList.remove("drop-hover");
+  const files = [...(e.dataTransfer.files || [])].filter((f) => (f.type || "").startsWith("image/"));
+  if (!files.length) return;
+  const rect = canvas.getBoundingClientRect();
+  let x = clamp(((e.clientX - rect.left) / rect.width) * 100, 8, 92);
+  let y = clamp(((e.clientY - rect.top) / rect.height) * 100, 8, 92);
+  for (const f of files) {
+    await addImageEl(f, x, y);
+    x = clamp(x + 6, 8, 92); y = clamp(y + 6, 8, 92); // stagger multiples
+  }
 });
 
 // ---------- QR ----------
