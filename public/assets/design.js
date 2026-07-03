@@ -16,42 +16,42 @@ const TEMPLATES = {
     name: "Rustic", tag: "Warm & handwritten", bg: "#f7f3ec",
     heading: { text: "Richard & Claudia", font: "'Great Vibes', cursive", color: "#8a6d4b", size: 17, x: 50, y: 20 },
     label:   { text: "Table 17", font: "'Cormorant Garamond', serif", color: "#2f2a24", size: 13, x: 50, y: 42, bold: true },
-    sub:     { text: "Scan to upload your photos", font: "'Cormorant Garamond', serif", color: "#8a6d4b", size: 4.4, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Cormorant Garamond', serif", color: "#8a6d4b", size: 4.4, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 67, size: 44 }
   },
   modern: {
     name: "Modern", tag: "Clean & minimal", bg: "#ffffff",
     heading: { text: "EMILY & JAKE", font: "'Inter', sans-serif", color: "#111111", size: 6.5, x: 50, y: 16, bold: true, caps: true },
     label:   { text: "Table 04", font: "'Inter', sans-serif", color: "#111111", size: 13, x: 50, y: 33, bold: true },
-    sub:     { text: "Scan to upload your photos", font: "'Inter', sans-serif", color: "#8a8a8a", size: 3.4, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Inter', sans-serif", color: "#8a8a8a", size: 3.4, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 63, size: 44 }
   },
   classic: {
     name: "Classic", tag: "Timeless serif", bg: "#fbfaf7",
     heading: { text: "The Wedding of", font: "'Cormorant Garamond', serif", color: "#1a1a1a", size: 5.6, x: 50, y: 15, caps: true },
     label:   { text: "Emily & Jake", font: "'Playfair Display', serif", color: "#1a1a1a", size: 11, x: 50, y: 27, bold: true },
-    sub:     { text: "Scan to share your photos", font: "'Playfair Display', serif", color: "#555555", size: 3.8, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Playfair Display', serif", color: "#555555", size: 3.8, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 63, size: 46 }
   },
   blacktie: {
     name: "Black Tie", tag: "Elegant & dark", bg: "#141b2e",
     heading: { text: "Celebrate", font: "'Great Vibes', cursive", color: "#e7c98a", size: 16, x: 50, y: 19 },
     label:   { text: "Table 4", font: "'Playfair Display', serif", color: "#ffffff", size: 12, x: 50, y: 41, bold: true },
-    sub:     { text: "Scan to add your photos", font: "'Inter', sans-serif", color: "#c8cede", size: 3.8, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Inter', sans-serif", color: "#c8cede", size: 3.8, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 66, size: 44 }
   },
   garden: {
     name: "Garden", tag: "Fresh & botanical", bg: "#eef3ea",
     heading: { text: "In Full Bloom", font: "'Great Vibes', cursive", color: "#5f7350", size: 16, x: 50, y: 20 },
     label:   { text: "Table 8", font: "'Cormorant Garamond', serif", color: "#354a2c", size: 12, x: 50, y: 42, bold: true },
-    sub:     { text: "Scan to upload photos", font: "'Cormorant Garamond', serif", color: "#5f7350", size: 4.2, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Cormorant Garamond', serif", color: "#5f7350", size: 4.2, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 67, size: 44 }
   },
   coastal: {
     name: "Coastal", tag: "Soft & seaside", bg: "#eef3f7",
     heading: { text: "By the Sea", font: "'Great Vibes', cursive", color: "#3a6b8a", size: 16, x: 50, y: 20 },
     label:   { text: "Table 6", font: "'Cormorant Garamond', serif", color: "#243d4e", size: 12, x: 50, y: 42, bold: true },
-    sub:     { text: "Scan to upload photos", font: "'Cormorant Garamond', serif", color: "#3a6b8a", size: 4.2, x: 50, y: 90, caps: true },
+    sub:     { text: "Scan to upload photos & videos", font: "'Cormorant Garamond', serif", color: "#3a6b8a", size: 4.2, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 67, size: 44 }
   }
 };
