@@ -1,6 +1,7 @@
 // The album page. Guests land here from the QR code.
 
-import { db, storage, ensureSignedIn } from "./firebase-init.js";
+import { db, storage, ensureSignedIn, auth } from "./firebase-init.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, updateDoc, increment, deleteDoc,
   collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
@@ -238,22 +239,33 @@ function atFreeLimit() {
 }
 
 function refreshLimitUi() {
+  // Paying is the host's call, so guests never see an upgrade button anywhere.
   limitNote.style.display = atFreeLimit() ? "block" : "none";
-  document.getElementById("upgrade-link").href = upgradeUrlFor(code);
+  const noteText = document.getElementById("limit-note-text");
+  const upgradeLink = document.getElementById("upgrade-link");
+  if (isHost) {
+    noteText.textContent = "This free album is full (25 photos). Unlock unlimited photos for $19.99, one time.";
+    upgradeLink.style.display = "";
+    upgradeLink.href = upgradeUrlFor(code);
+  } else {
+    noteText.textContent = "This album is full (25 photos). Ask the host to unlock more space.";
+    upgradeLink.style.display = "none";
+  }
 
-  // Banner nudge for guests on an unpaid album (it's the <a> itself now).
-  const guestBanner = document.getElementById("guest-upgrade");
-  guestBanner.style.display = !isHost && !eventData.paid ? "block" : "none";
-  guestBanner.href = upgradeUrlFor(code);
+  // The old guest "be the hero" nudge is gone: guests don't get a pay button.
+  document.getElementById("guest-upgrade").style.display = "none";
 
   // The Settings tab holds the host's upgrade action and the paid badge.
   const setUpgrade = document.getElementById("set-upgrade");
   const setPaid = document.getElementById("set-paid");
   setUpgrade.href = upgradeUrlFor(code);
-  setUpgrade.hidden = eventData.paid;
+  setUpgrade.hidden = eventData.paid || !isHost;
   setPaid.hidden = !eventData.paid;
 
-  document.getElementById("st-upgrade").href = eventData.paid ? "/albums" : upgradeUrlFor(code);
+  // Sidebar "Upgrade Plan" is host-only too, and only while unpaid.
+  const stUpgrade = document.getElementById("st-upgrade");
+  if (isHost && !eventData.paid) { stUpgrade.style.display = ""; stUpgrade.href = upgradeUrlFor(code); }
+  else { stUpgrade.style.display = "none"; }
 }
 
 // ---------- favorites (local, per device) ----------
@@ -932,8 +944,8 @@ function onAddPhotos() {
 uploadBtn.addEventListener("click", onAddPhotos);
 document.getElementById("fab-add").addEventListener("click", onAddPhotos);
 
-// The paywall. Hosts get the pitch, guests get the explanation
-// (and a chance to be the hero).
+// The paywall. Hosts get the upgrade button; guests are told to ask the host,
+// with no pay button of their own.
 const limitModal = document.getElementById("limit-modal");
 
 function openLimitModal(reason) {
@@ -944,17 +956,23 @@ function openLimitModal(reason) {
     title.textContent = "Download all is a Party perk";
     copy.textContent = isHost
       ? "Grab every photo in one zip when you unlock this album for $19.99, one time. You can still download photos one by one for free."
-      : "Downloading the whole album at once is a Party perk. The host can unlock it for $19.99, or you can. Single photos are always free to save.";
+      : "Downloading the whole album at once is a Party perk. Ask the host to unlock it. Single photos are always free to save.";
   } else {
     title.textContent = isHost ? "Your album is full" : "This album is full";
     copy.textContent = isHost
       ? "Free albums hold 25 photos and yours just hit the ceiling. Unlock unlimited photos and a full year of gallery time for $19.99, one time."
-      : "Free albums hold 25 photos and this one is maxed out. The host can unlock unlimited photos for $19.99, or you can be the hero and do it for them.";
+      : "Free albums hold 25 photos and this one is maxed out. Ask the host to unlock unlimited photos for everyone.";
   }
 
   const up = document.getElementById("limit-upgrade");
-  up.href = upgradeUrlFor(code);
-  up.textContent = isHost ? "Unlock unlimited, $19.99" : "Unlock it, $19.99";
+  if (isHost) {
+    up.style.display = "";
+    up.href = upgradeUrlFor(code);
+    up.textContent = "Unlock unlimited, $19.99";
+  } else {
+    up.style.display = "none";
+  }
+  document.getElementById("limit-close").textContent = isHost ? "Maybe later" : "Got it";
 
   limitModal.classList.add("open");
   track("paywall_shown", { album: code, role: isHost ? "host" : "guest", reason: reason || "full" });
@@ -1271,6 +1289,51 @@ function setupSettingsTab() {
   document.getElementById("set-tables").href = `/tables?c=${code}`;
   const rename = document.getElementById("set-rename");
   if (isHost) { rename.hidden = false; rename.addEventListener("click", doRename); }
+
+  // Sign out shows only for a real account (guests are anonymous under the hood).
+  const signout = document.getElementById("set-signout");
+  if (currentUser && !currentUser.isAnonymous) {
+    signout.hidden = false;
+    signout.addEventListener("click", async () => {
+      try { await signOut(auth); } catch (err) { console.error(err); }
+      location.href = "/";
+    });
+  }
+
+  // Only the host can wipe the whole album.
+  const del = document.getElementById("set-delete");
+  if (isHost) { del.hidden = false; del.addEventListener("click", deleteAlbum); }
+}
+
+// Host action: delete every photo, message, and the album itself. Storage
+// files are left orphaned (deleting them is admin-only, and they cost nothing
+// and are unreachable without the exact random path).
+async function deleteAlbum() {
+  if (!confirm("Delete this album and all its photos? This can't be undone.")) return;
+  const del = document.getElementById("set-delete");
+  const lbl = del.querySelector("span");
+  del.disabled = true; lbl.textContent = "Deleting...";
+  try {
+    for (const id of [...photoCache.keys()]) {
+      await deleteDoc(doc(db, "events", code, "photos", id)).catch(() => {});
+    }
+    for (const m of msgCache) {
+      await deleteDoc(doc(db, "events", code, "messages", m.id)).catch(() => {});
+    }
+    await deleteDoc(doc(db, "events", code));
+    for (const key of ["snapjar_albums", "snapjar_visited"]) {
+      try {
+        const list = JSON.parse(localStorage.getItem(key) || "[]").filter((a) => a.code !== code);
+        localStorage.setItem(key, JSON.stringify(list));
+      } catch { /* ignore */ }
+    }
+    track("album_deleted", { album: code });
+    location.href = "/albums";
+  } catch (err) {
+    console.error("delete album failed", err);
+    alert("Couldn't delete it just now. Try again in a minute.");
+    del.disabled = false; lbl.textContent = "Delete album & all photos";
+  }
 }
 
 // ---------- profile editor ----------
@@ -1300,6 +1363,9 @@ function setupProfileModal() {
   });
 
   document.getElementById("open-profile").addEventListener("click", openProfile);
+  // The name/avatar chip up top opens the profile editor too.
+  const topChip = document.getElementById("topbar-chip");
+  if (topChip) topChip.addEventListener("click", openProfile);
   document.getElementById("profile-close").addEventListener("click", () => modal.classList.remove("open"));
   modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
 

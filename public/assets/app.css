@@ -439,3 +439,14 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 @media (max-width: 420px) {
   .pf-emojis { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* settings: danger row + legal footer */
+.set-row.danger-row { color: var(--danger); }
+.set-row.danger-row:hover { background: #fef3f2; }
+.set-foot {
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  margin-top: 20px; font-family: inherit; font-weight: 500;
+}
+.set-foot a { color: var(--ink-soft); text-decoration: none; font-size: 0.86rem; }
+.set-foot a:hover { color: var(--accent); text-decoration: underline; }
+.set-foot-dot { color: var(--faint); }

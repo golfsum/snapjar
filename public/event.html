@@ -64,7 +64,7 @@
       <div class="main">
         <div class="topbar">
           <button class="bell" type="button" aria-label="Activity" data-goto="messages"><span>&#128276;</span><span class="bdot"></span></button>
-          <button class="user-chip" type="button" data-goto="settings">
+          <button class="user-chip" id="topbar-chip" type="button" aria-label="Your profile">
             <span class="user-av" id="user-av-top">G</span>
             <span class="user-meta"><span class="user-name" id="user-name-top">Guest</span></span>
           </button>
@@ -99,7 +99,7 @@
           </div>
 
           <div class="limit-note" id="limit-note" style="display:none">
-            This free album is full (25 photos). Unlock unlimited photos for $19.99, one time.
+            <span id="limit-note-text">This free album is full (25 photos). Unlock unlimited photos for $19.99, one time.</span>
             <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
           </div>
 
@@ -184,6 +184,13 @@
             <button class="set-row" id="set-rename" type="button" hidden><span>Rename album</span><span class="chev">&#8250;</span></button>
             <a class="set-row" id="set-upgrade" href="#" target="_blank" rel="noopener" hidden><span>Unlock unlimited photos, $19.99</span><span class="chev">&#8250;</span></a>
             <span class="set-row set-badge" id="set-paid" hidden><span>Party album, unlimited photos</span><span>&#10003;</span></span>
+            <button class="set-row" id="set-signout" type="button" hidden><span>Sign out</span><span class="chev">&#8250;</span></button>
+            <button class="set-row danger-row" id="set-delete" type="button" hidden><span>Delete album &amp; all photos</span><span class="chev">&#8250;</span></button>
+          </div>
+          <div class="set-foot">
+            <a href="/privacy" target="_blank" rel="noopener">Privacy</a>
+            <span class="set-foot-dot">&middot;</span>
+            <a href="/terms" target="_blank" rel="noopener">Terms</a>
           </div>
         </section>
       </div>
