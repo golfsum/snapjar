@@ -1,0 +1,121 @@
+/* Table QR Manager. Clean modern UI + printable per-table signs. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #fafafa; --panel: #fff; --ink: #101828; --soft: #667085; --faint: #9ca3af;
+  --line: #e5e7eb; --line-strong: #d1d5db; --accent: #2f6bed; --accent-deep: #1d54c7;
+  --accent-soft: #eef4ff; --radius: 14px;
+  --shadow: 0 1px 2px rgba(16,24,40,0.05), 0 8px 24px rgba(16,24,40,0.07);
+  --font: -apple-system, "Inter", system-ui, sans-serif;
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+.tm-top {
+  display: flex; align-items: center; gap: 16px; padding: 14px 24px;
+  background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20;
+}
+.tm-logo { font-weight: 800; font-size: 1.15rem; text-decoration: none; color: var(--ink); }
+.tm-logo span { color: var(--accent); }
+.grow { flex: 1; }
+.tm-btn {
+  font-family: var(--font); font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  text-decoration: none; transition: all 160ms ease;
+}
+.tm-btn:hover { border-color: var(--line-strong); box-shadow: var(--shadow); }
+.tm-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(47,107,237,0.4); }
+.tm-btn.primary:hover { background: var(--accent-deep); }
+.tm-btn.big { padding: 14px 24px; font-size: 1rem; display: inline-block; }
+.tm-btn.back { color: var(--soft); }
+
+.tm-main { max-width: 1100px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 32px) 80px; }
+.tm-state { text-align: center; padding: 60px 20px; color: var(--soft); }
+
+/* upsell */
+.upsell-card {
+  max-width: 480px; margin: 30px auto; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 20px; padding: 40px 34px; box-shadow: var(--shadow); text-align: center;
+}
+.upsell-badge {
+  display: inline-block; background: var(--accent-soft); color: var(--accent);
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 999px; margin-bottom: 16px;
+}
+.upsell-card h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+.upsell-sub { color: var(--soft); margin-bottom: 22px; line-height: 1.5; }
+.upsell-list { list-style: none; text-align: left; max-width: 320px; margin: 0 auto 26px; }
+.upsell-list li { padding: 8px 0 8px 28px; position: relative; font-size: 0.96rem; }
+.upsell-list li::before {
+  content: ""; position: absolute; left: 2px; top: 13px; width: 13px; height: 7px;
+  border-left: 2.5px solid var(--accent); border-bottom: 2.5px solid var(--accent); transform: rotate(-45deg);
+}
+.upsell-note { font-size: 0.82rem; color: var(--faint); margin-top: 14px; }
+
+/* manager */
+.tm-head { margin-bottom: 22px; }
+.tm-head h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+.tm-sub { color: var(--soft); margin-top: 4px; }
+
+.tm-controls {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow); margin-bottom: 22px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+}
+.ctrl-row label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 8px; }
+.ctrl-inline { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--soft); }
+.ctrl-inline input[type="number"] { width: 72px; }
+.ctrl-inline input, #style-select {
+  font-family: var(--font); font-size: 0.9rem; padding: 9px 11px; border: 1px solid var(--line);
+  border-radius: 9px; background: #fff; color: var(--ink); outline: none; flex: 1; min-width: 0;
+}
+.ctrl-inline input:focus, #style-select:focus { border-color: var(--accent); }
+#style-select { width: 100%; }
+
+.tm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.tm-chip {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 8px 7px 14px; font-size: 0.86rem; font-weight: 500;
+}
+.tm-chip button { border: none; background: var(--bg); color: var(--soft); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; line-height: 1; }
+.tm-chip button:hover { background: #fde2e2; color: #dc2626; }
+.tm-chip.empty { color: var(--faint); border-style: dashed; }
+
+.tm-count { font-size: 0.85rem; color: var(--faint); margin-bottom: 14px; }
+
+/* preview grid of signs */
+.tcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; }
+
+.tcard {
+  aspect-ratio: 5 / 7; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: var(--shadow); overflow: hidden; container-type: inline-size;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 9cqw 6cqw; text-align: center;
+}
+.tcard.ivory { background: #fbfaf7; color: #1a1a1a; }
+.tcard.cream { background: #f7f3ec; color: #2f2a24; }
+.tcard.navy { background: #141b2e; color: #fff; }
+.tcard .tc-head { font-family: "Cormorant Garamond", serif; font-size: 6cqw; letter-spacing: 0.02em; }
+.tcard .tc-label { font-family: "Cormorant Garamond", serif; font-weight: 700; font-size: 13cqw; line-height: 1; }
+.tcard .tc-qr { width: 52cqw; height: 52cqw; background: #fff; padding: 2cqw; border-radius: 2cqw; }
+.tcard .tc-qr img { width: 100%; height: 100%; display: block; }
+.tcard .tc-scan { font-size: 3.4cqw; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+.tcard .tc-mid { display: flex; flex-direction: column; align-items: center; gap: 4cqw; }
+
+@media (max-width: 720px) {
+  .tm-controls { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* print: one sign per page, big */
+@media print {
+  .tm-top, .tm-head, .tm-controls, .tm-chips, .tm-count { display: none !important; }
+  .tm-main { padding: 0; max-width: none; }
+  .tcards { display: block; }
+  .tcard {
+    width: 5in; height: 7in; aspect-ratio: auto; margin: 0 auto;
+    page-break-after: always; break-after: page; box-shadow: none; border: none; border-radius: 0;
+  }
+  .tcard:last-child { page-break-after: auto; }
+}

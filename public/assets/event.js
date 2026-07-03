@@ -1182,6 +1182,7 @@ function setupSettingsTab() {
     if (!eventData.paid) { openLimitModal("download"); return; }
     downloadMany([...photoCache], `snapjar-${safeName(eventData.name)}.zip`);
   });
+  document.getElementById("set-tables").href = `/tables?c=${code}`;
   const rename = document.getElementById("set-rename");
   if (isHost) { rename.hidden = false; rename.addEventListener("click", doRename); }
 }
@@ -1308,7 +1309,9 @@ function openShare() {
 
 document.getElementById("share-btn").addEventListener("click", openShare);
 document.getElementById("share-design").addEventListener("click", () => { location.href = `/design?c=${code}`; });
-document.getElementById("share-close").addEventListener("click", () => shareModal.classList.remove("open"));
+for (const id of ["share-close", "share-close-bottom"]) {
+  document.getElementById(id).addEventListener("click", () => shareModal.classList.remove("open"));
+}
 shareModal.addEventListener("click", (e) => {
   if (e.target === shareModal) shareModal.classList.remove("open");
 });

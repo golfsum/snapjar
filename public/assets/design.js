@@ -393,6 +393,8 @@ document.getElementById("download-btn").addEventListener("click", async () => {
 
 // ---------- init ----------
 
+document.getElementById("back-btn").href = code ? `/event?c=${code}` : "/albums";
+
 (async function init() {
   buildTemplate("rustic");
   try {

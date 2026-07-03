@@ -163,19 +163,21 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .share-split .btn { border-radius: 10px; }
 
 /* modernized share dialog */
+#share-modal { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .share-panel-v2 {
   position: relative;
   max-width: 380px;
   width: 100%;
+  margin: auto;               /* centers when it fits, scrolls when tall */
   padding: 28px 28px 24px;
   border-radius: 20px;
   text-align: center;
 }
 .share-panel-v2 .share-x {
-  position: absolute; top: 16px; right: 16px;
-  width: 30px; height: 30px; border-radius: 50%;
+  position: absolute; top: 14px; right: 14px;
+  width: 34px; height: 34px; border-radius: 50%;
   border: none; background: var(--paper-deep); color: var(--ink-soft);
-  font-size: 1.2rem; line-height: 1; cursor: pointer;
+  font-size: 1.4rem; line-height: 1; cursor: pointer; z-index: 2;
   transition: background 150ms ease, color 150ms ease;
 }
 .share-panel-v2 .share-x:hover { background: var(--line); color: var(--ink); }
@@ -187,6 +189,27 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .share-field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 7px; }
 .share-actions-v2 { display: flex; flex-direction: column; gap: 10px; }
 .share-actions-v2 .btn { width: 100%; }
+.share-close-text {
+  display: block; width: 100%; margin-top: 4px; background: none; border: none;
+  color: var(--ink-soft); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+  padding: 10px; cursor: pointer; border-radius: 10px;
+}
+.share-close-text:hover { background: var(--paper-deep); color: var(--ink); }
+
+@media (max-width: 480px) {
+  #share-modal { padding: 12px; }
+  .share-panel-v2 { padding: 22px 18px 16px; border-radius: 18px; }
+  .share-panel-v2 .qr-wrap { padding: 14px; margin-bottom: 16px; }
+  .share-panel-v2 .qr-wrap img { width: 168px; height: 168px; }
+  .share-title { font-size: 1.1rem; margin-bottom: 14px; }
+  .share-field { margin-bottom: 14px; }
+}
+
+.pro-tag {
+  display: inline-block; background: var(--accent-soft); color: var(--accent);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 6px; margin-left: 6px; vertical-align: middle;
+}
 
 /* guest upgrade nudge */
 .guest-upgrade-banner {

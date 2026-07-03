@@ -429,12 +429,17 @@ function renderTable() {
     payBtn.textContent = a.paid ? "Mark free" : "Mark paid";
     payBtn.addEventListener("click", () => setPaid(a, !a.paid, payBtn));
 
+    const proBtn = document.createElement("button");
+    proBtn.className = "tbtn";
+    proBtn.textContent = a.pro ? "Remove Pro" : "Mark Pro";
+    proBtn.addEventListener("click", () => setPro(a, !a.pro, proBtn));
+
     const delBtn = document.createElement("button");
     delBtn.className = "tbtn danger";
     delBtn.textContent = "Delete";
     delBtn.addEventListener("click", () => removeAlbum(a, delBtn));
 
-    actions.append(payBtn, delBtn);
+    actions.append(payBtn, proBtn, delBtn);
     tr.append(name, codeCell, photos, created, status, actions);
     tbody.appendChild(tr);
   }
@@ -445,6 +450,22 @@ async function setPaid(album, paid, btn) {
   try {
     await updateDoc(doc(db, "events", album.code), { paid });
     album.paid = paid;
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    alert("Update failed: " + (err.code || err.message));
+  }
+}
+
+// Pro ($29) includes Party benefits, so granting Pro also marks the album paid.
+async function setPro(album, pro, btn) {
+  btn.disabled = true;
+  try {
+    const patch = pro ? { pro: true, paid: true } : { pro: false };
+    await updateDoc(doc(db, "events", album.code), patch);
+    album.pro = pro;
+    if (pro) album.paid = true;
     renderAll();
   } catch (err) {
     console.error(err);

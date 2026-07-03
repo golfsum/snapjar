@@ -43,6 +43,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); -webk
 .top-btn:active { transform: translateY(1px); }
 .top-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(47,107,237,0.4); }
 .top-btn.primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+.back-btn { text-decoration: none; color: var(--soft); }
+.back-btn:hover { color: var(--ink); }
 
 /* ---------- layout ---------- */
 .design-wrap { display: grid; grid-template-columns: 336px 1fr; align-items: start; }

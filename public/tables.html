@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table QR Manager · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/tables.css">
+</head>
+<body>
+
+  <div class="tm-top">
+    <a class="tm-btn back" id="back-btn" href="/albums">&#8592; Back</a>
+    <a class="tm-logo" href="/">snapjar<span>.</span></a>
+    <span class="grow"></span>
+    <button class="tm-btn primary" id="print-btn" type="button" hidden>&#128424; Print all signs</button>
+  </div>
+
+  <main class="tm-main">
+
+    <div id="loading" class="tm-state">Loading...</div>
+
+    <!-- upsell (not Pro yet) -->
+    <div id="upsell" class="tm-state" style="display:none">
+      <div class="upsell-card">
+        <div class="upsell-badge">Pro</div>
+        <h1>Table QR Manager</h1>
+        <p class="upsell-sub">List every table once and print a personalized QR sign for each one, all pointing to your album, each tagged so you know which table sent which photos.</p>
+        <ul class="upsell-list">
+          <li>Unlimited table signs from one album</li>
+          <li>Print them all at once, one per page</li>
+          <li>Photos auto-tagged by table</li>
+          <li>Includes everything in Party (unlimited photos, no watermark)</li>
+        </ul>
+        <a class="tm-btn primary big" id="upsell-btn" href="#" target="_blank" rel="noopener">Unlock Pro, $29 one time</a>
+        <p class="upsell-note">One time, per album. You're on the free plan right now.</p>
+      </div>
+    </div>
+
+    <!-- manager (Pro) -->
+    <div id="manager" style="display:none">
+      <header class="tm-head">
+        <h1>Table QR Manager</h1>
+        <p class="tm-sub" id="album-line"></p>
+      </header>
+
+      <div class="tm-controls">
+        <div class="ctrl-row">
+          <label>Quick add</label>
+          <div class="ctrl-inline">
+            <span>Tables 1 to</span>
+            <input type="number" id="range-to" min="1" max="200" value="12">
+            <button class="tm-btn" id="range-add" type="button">Add</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <label for="custom-label">Add a custom sign</label>
+          <div class="ctrl-inline">
+            <input type="text" id="custom-label" placeholder="Head Table, Bar, Patio..." maxlength="30">
+            <button class="tm-btn" id="custom-add" type="button">Add</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <label for="style-select">Card style</label>
+          <select id="style-select">
+            <option value="ivory">Ivory (light, ink-saving)</option>
+            <option value="cream">Cream</option>
+            <option value="navy">Navy</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tm-chips" id="table-chips"></div>
+
+      <div class="tm-count" id="tm-count"></div>
+      <div class="tcards" id="tcards"></div>
+    </div>
+
+  </main>
+
+  <script type="module" src="assets/tables.js"></script>
+</body>
+</html>
