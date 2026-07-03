@@ -5,13 +5,15 @@ service firebase.storage {
     match /events/{code}/{fileName} {
       allow read: if true;
 
-      // Signed-in guests only, images only, 10 MB cap, and the album has to
-      // actually exist in Firestore. The client compresses to ~300 KB anyway,
-      // this is the backstop.
+      // Signed-in guests only, and the album must exist in Firestore. Images
+      // are compressed client-side (~300 KB, 10 MB backstop); videos upload
+      // as-is with a 100 MB cap.
       allow create: if request.auth != null
-        && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*')
-        && firestore.exists(/databases/(default)/documents/events/$(code));
+        && firestore.exists(/databases/(default)/documents/events/$(code))
+        && (
+          (request.resource.contentType.matches('image/.*') && request.resource.size < 10 * 1024 * 1024)
+          || (request.resource.contentType.matches('video/.*') && request.resource.size < 100 * 1024 * 1024)
+        );
 
       allow update: if false;
 

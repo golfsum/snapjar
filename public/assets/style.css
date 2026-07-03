@@ -1013,11 +1013,15 @@ a { color: inherit; }
 
 .lightbox.open { display: flex; }
 
-.lightbox img {
+.lightbox img,
+.lightbox video {
   max-width: 100%;
   max-height: 86vh;
   border-radius: 8px;
 }
+
+.lightbox video { background: #000; }
+.lightbox img[hidden], .lightbox video[hidden] { display: none; }
 
 .lightbox-actions {
   position: absolute;

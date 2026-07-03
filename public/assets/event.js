@@ -200,8 +200,7 @@ function updateChipCounts() {
   const labels = { all: "All", photos: "Photos", videos: "Videos", favorites: "Favorites", mine: "Mine" };
   for (const chip of document.querySelectorAll(".chip")) {
     const f = chip.dataset.filter;
-    const c = f === "videos" ? 0 : countFor(f);
-    chip.textContent = `${labels[f]} (${c})`;
+    chip.textContent = `${labels[f]} (${countFor(f)})`;
   }
 }
 
@@ -451,7 +450,8 @@ let searchTerm = "";
 
 // One source of truth for whether a photo shows under a given filter.
 function photoPasses(filter, id, data) {
-  if (filter === "videos") return false;                 // no video support yet
+  if (filter === "videos") return data.type === "video";
+  if (filter === "photos") return data.type !== "video";
   if (filter === "favorites") return favorites.has(id);
   if (filter === "guest") return (data.uploaderName || "") === (guestNameFilter || "");
   if (filter === "mine") return data.uploaderUid === currentUser.uid;
@@ -542,11 +542,24 @@ function renderGallery() {
       if (canDelete(data)) item.classList.add("deletable");
       if (selected.has(id)) item.classList.add("checked");
 
-      const img = document.createElement("img");
-      img.src = data.url;
-      img.loading = "lazy";
-      img.alt = data.uploaderName ? `Photo by ${data.uploaderName}` : "Event photo";
-      item.appendChild(img);
+      if (data.type === "video") {
+        const vid = document.createElement("video");
+        vid.src = data.url;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.preload = "metadata";
+        item.appendChild(vid);
+        const play = document.createElement("span");
+        play.className = "play-badge";
+        play.innerHTML = "&#9654;";
+        item.appendChild(play);
+      } else {
+        const img = document.createElement("img");
+        img.src = data.url;
+        img.loading = "lazy";
+        img.alt = data.uploaderName ? `Photo by ${data.uploaderName}` : "Event photo";
+        item.appendChild(img);
+      }
 
       const pick = document.createElement("span");
       pick.className = "pick";
@@ -673,12 +686,17 @@ function saveBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(objUrl), 3000);
 }
 
+function extOf(data) {
+  const m = (data.path || "").match(/\.([a-z0-9]{2,5})$/i);
+  return m ? m[1].toLowerCase() : (data.type === "video" ? "mp4" : "jpg");
+}
+
 async function downloadOne(id) {
   const data = photoCache.get(id);
   if (!data) return false;
   try {
     const blob = await fetchAsBlob(data.url);
-    saveBlob(blob, `${safeName(data.uploaderName)}.jpg`);
+    saveBlob(blob, `${safeName(data.uploaderName)}.${extOf(data)}`);
     return true;
   } catch (err) {
     console.error("download failed, opening in a tab instead", err);
@@ -730,7 +748,7 @@ async function downloadMany(entries, zipName) {
       const blob = await fetchAsBlob(data.url);
       const base = safeName(data.uploaderName);
       used[base] = (used[base] || 0) + 1;
-      zip.file(`${base}-${used[base]}.jpg`, blob);
+      zip.file(`${base}-${used[base]}.${extOf(data)}`, blob);
       ok++;
     } catch (err) {
       console.error("skipping a photo in the zip", err);
@@ -930,6 +948,9 @@ function describeUploadError(err) {
   if (code.includes("storage/retry-limit-exceeded") || code.includes("unavailable") || String(err.message).includes("network")) {
     return "the connection dropped mid-upload.";
   }
+  if (String(err.message).includes("video too large")) {
+    return "that video is too big (100 MB max). Try a shorter clip.";
+  }
   if (String(err.message).includes("too large")) {
     return "that photo is too large (10 MB max).";
   }
@@ -937,12 +958,27 @@ function describeUploadError(err) {
 }
 
 async function uploadOne(file) {
-  const blob = await compressImage(file);
+  const isVideo = (file.type || "").startsWith("video/");
+  let blob, contentType, ext, type;
+
+  if (isVideo) {
+    if (file.size > 100 * 1024 * 1024) throw new Error("video too large");
+    blob = file;
+    contentType = file.type || "video/mp4";
+    ext = (file.name.split(".").pop() || "mp4").toLowerCase().slice(0, 5);
+    type = "video";
+  } else {
+    blob = await compressImage(file);
+    contentType = "image/jpeg";
+    ext = "jpg";
+    type = "image";
+  }
+
   const id = crypto.randomUUID();
-  const path = `events/${code}/${id}.jpg`;
+  const path = `events/${code}/${id}.${ext}`;
   const storageRef = ref(storage, path);
 
-  await uploadBytes(storageRef, blob, { contentType: "image/jpeg" });
+  await uploadBytes(storageRef, blob, { contentType });
   const url = await getDownloadURL(storageRef);
 
   const uploaderName = guestNameInput.value.trim().slice(0, 30) || null;
@@ -950,6 +986,7 @@ async function uploadOne(file) {
   await addDoc(collection(db, "events", code, "photos"), {
     url,
     path,
+    type,
     uploaderName,
     uploaderUid: currentUser.uid,
     createdAt: serverTimestamp()
@@ -988,6 +1025,7 @@ async function compressImage(file) {
 
 const lightbox = document.getElementById("lightbox");
 const lbImg = document.getElementById("lb-img");
+const lbVideo = document.getElementById("lb-video");
 const lbDownload = document.getElementById("lb-download");
 const lbDelete = document.getElementById("lb-delete");
 let lightboxPhotoId = null;
@@ -996,7 +1034,17 @@ function openLightbox(id) {
   const data = photoCache.get(id);
   if (!data) return;
   lightboxPhotoId = id;
-  lbImg.src = data.url;
+  if (data.type === "video") {
+    lbVideo.src = data.url;
+    lbVideo.hidden = false;
+    lbImg.hidden = true;
+    lbImg.src = "";
+  } else {
+    lbImg.src = data.url;
+    lbImg.hidden = false;
+    lbVideo.hidden = true;
+    lbVideo.removeAttribute("src");
+  }
   lbDownload.href = data.url;
   lbDelete.style.display = isHost || data.uploaderUid === currentUser.uid ? "inline-block" : "none";
   updateFavBtn();
@@ -1017,6 +1065,8 @@ document.getElementById("lb-fav").addEventListener("click", () => {
 function closeLightbox() {
   lightbox.classList.remove("open");
   lbImg.src = "";
+  try { lbVideo.pause(); } catch { /* ignore */ }
+  lbVideo.removeAttribute("src");
   lightboxPhotoId = null;
 }
 

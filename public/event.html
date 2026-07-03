@@ -105,7 +105,7 @@
             <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
           </div>
 
-          <input type="file" id="file-input" accept="image/*" multiple hidden>
+          <input type="file" id="file-input" accept="image/*,video/*" multiple hidden>
           <p class="upload-status" id="upload-status"></p>
 
           <div class="filterbar">
@@ -277,6 +277,7 @@
       <button id="lb-close" type="button">Close</button>
     </div>
     <img id="lb-img" alt="Event photo">
+    <video id="lb-video" controls playsinline hidden></video>
   </div>
 
   <div class="lightbox" id="report-modal">
