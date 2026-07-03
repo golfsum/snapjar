@@ -1,0 +1,123 @@
+/* Snapjar sign designer. A drag-and-drop editor for printable QR table cards.
+   Standalone page with its own clean UI. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --ink: #101828;
+  --soft: #667085;
+  --line: #e7e9ec;
+  --accent: #2f6bed;
+  --accent-deep: #1d54c7;
+  --radius: 12px;
+  --font: -apple-system, "Inter", system-ui, sans-serif;
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--ink); }
+
+.design-top {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 20;
+}
+.design-top .logo { font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--ink); }
+.design-top .logo span { color: var(--accent); }
+.design-top .grow { flex: 1; }
+.top-btn {
+  font-family: var(--font); font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  padding: 9px 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.top-btn:hover { border-color: var(--accent); color: var(--accent); }
+.top-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.top-btn.primary:hover { background: var(--accent-deep); }
+
+.design-wrap { display: grid; grid-template-columns: 300px 1fr; align-items: start; }
+
+/* controls panel */
+.panel {
+  background: var(--panel); border-right: 1px solid var(--line);
+  height: calc(100vh - 57px); overflow-y: auto; padding: 18px;
+  position: sticky; top: 57px;
+}
+.panel h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--soft); margin: 20px 0 10px; }
+.panel h2:first-child { margin-top: 0; }
+
+.tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tpl {
+  border: 2px solid var(--line); border-radius: 10px; cursor: pointer; overflow: hidden;
+  aspect-ratio: 5 / 7; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 0.7rem; text-align: center; padding: 6px; gap: 3px;
+}
+.tpl.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(47,107,237,0.2); }
+.tpl .tpl-name { font-weight: 700; }
+
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; }
+.field input[type="text"], .field select {
+  width: 100%; font-family: var(--font); font-size: 0.92rem; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); outline: none;
+}
+.field input:focus, .field select:focus { border-color: var(--accent); }
+.field .hint { font-size: 0.76rem; color: var(--soft); margin-top: 4px; }
+
+.row { display: flex; gap: 8px; align-items: center; }
+.row input[type="color"] { width: 40px; height: 34px; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
+
+.pbtn {
+  width: 100%; font-family: var(--font); font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  padding: 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); margin-bottom: 8px;
+}
+.pbtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* contextual element controls */
+.el-controls { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+.el-controls.hidden { display: none; }
+.slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.slider-row label { font-size: 0.8rem; min-width: 46px; }
+.slider-row input[type="range"] { flex: 1; }
+.style-toggles { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.tg { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 7px 10px; cursor: pointer; font-family: var(--font); font-weight: 700; font-size: 0.85rem; }
+.tg.on { border-color: var(--accent); color: var(--accent); background: #eef4ff; }
+.danger-btn { color: #e5484d; border-color: #f3c1c1; }
+
+/* canvas area */
+.stage { padding: 30px; display: flex; justify-content: center; }
+.card-canvas {
+  position: relative; width: 400px; max-width: 100%; aspect-ratio: 5 / 7;
+  background: #f7f3ec center/cover no-repeat; border-radius: 6px;
+  box-shadow: 0 10px 40px rgba(16,24,40,0.14); overflow: hidden; user-select: none; container-type: inline-size;
+}
+.card-overlay { position: absolute; inset: 0; background: transparent; pointer-events: none; }
+
+.el { position: absolute; cursor: move; touch-action: none; }
+.el.text {
+  min-width: 40px; padding: 2px 4px; outline: none; white-space: pre-wrap;
+  line-height: 1.15; transform: translate(-50%, -50%);
+}
+.el.qr { transform: translate(-50%, -50%); }
+.el.qr img { display: block; width: 100%; height: 100%; }
+.el.selected { box-shadow: 0 0 0 1.5px var(--accent); }
+.el .handle {
+  position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px;
+  background: var(--accent); border: 2px solid #fff; border-radius: 50%; cursor: nwse-resize; display: none;
+}
+.el.selected .handle { display: block; }
+
+.stage-hint { text-align: center; color: var(--soft); font-size: 0.85rem; margin-top: 14px; }
+
+/* print: only the card */
+@media print {
+  .design-top, .panel, .stage-hint { display: none !important; }
+  .design-wrap { display: block; }
+  .stage { padding: 0; }
+  .card-canvas { box-shadow: none; width: 5in; border-radius: 0; }
+  .el.selected { box-shadow: none; }
+  .el .handle { display: none !important; }
+}
+
+@media (max-width: 800px) {
+  .design-wrap { grid-template-columns: 1fr; }
+  .panel { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+}

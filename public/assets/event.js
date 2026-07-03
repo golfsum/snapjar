@@ -50,6 +50,15 @@ async function init() {
     eventData = snap.data();
     isHost = eventData.hostUid === currentUser.uid;
 
+    // A sign can carry a table label (?t=Table 17). Photos scanned from that
+    // sign are tagged with it by default; guests can still rename in Settings.
+    const tableLabel = new URLSearchParams(location.search).get("t");
+    if (tableLabel) {
+      const clean = tableLabel.slice(0, 30);
+      guestNameInput.value = clean;
+      try { localStorage.setItem("snapjar_guest_name", clean); } catch { /* ignore */ }
+    }
+
     document.title = `${eventData.name} · Snapjar`;
     document.getElementById("event-title").textContent = eventData.name;
     document.getElementById("album-sub").textContent =
@@ -64,7 +73,6 @@ async function init() {
 
     loadingState.style.display = "none";
     albumView.style.display = "grid";
-    document.getElementById("tabbar").style.display = "flex";
 
     setupTabs();
     setupSettingsTab();
@@ -248,7 +256,7 @@ function setupRail() {
   document.getElementById("rail-copy").addEventListener("click", () => copyText(url, "rail-copy"));
   document.getElementById("rail-sharelink").addEventListener("click", () => nativeShare(url));
   document.getElementById("rail-download-qr").addEventListener("click", downloadQr);
-  document.getElementById("rail-print").addEventListener("click", () => { openShare(); setTimeout(() => window.print(), 300); });
+  document.getElementById("rail-print").addEventListener("click", () => { location.href = `/design?c=${code}`; });
   document.getElementById("rail-viewall").addEventListener("click", () => switchTab("guests"));
   document.getElementById("lm-viewall").addEventListener("click", () => switchTab("guests"));
 }
@@ -1098,6 +1106,11 @@ function setupTabs() {
   for (const b of document.querySelectorAll(".tabbar-btn, .snav")) {
     if (b.dataset.tab) b.addEventListener("click", () => switchTab(b.dataset.tab));
   }
+  // The bell and the user chips stay inside the app instead of leaving for the
+  // separate account page.
+  for (const b of document.querySelectorAll("[data-goto]")) {
+    b.addEventListener("click", () => switchTab(b.dataset.goto));
+  }
   for (const chip of document.querySelectorAll(".chip")) {
     chip.addEventListener("click", () => {
       for (const c of document.querySelectorAll(".chip")) c.classList.remove("active");
@@ -1244,6 +1257,7 @@ function openShare() {
 }
 
 document.getElementById("share-btn").addEventListener("click", openShare);
+document.getElementById("share-design").addEventListener("click", () => { location.href = `/design?c=${code}`; });
 document.getElementById("share-close").addEventListener("click", () => shareModal.classList.remove("open"));
 shareModal.addEventListener("click", (e) => {
   if (e.target === shareModal) shareModal.classList.remove("open");

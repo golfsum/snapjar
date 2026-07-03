@@ -53,23 +53,23 @@
           <div class="st-pct" id="storage-pct">0%</div>
           <a class="st-upgrade" id="st-upgrade" href="#" target="_blank" rel="noopener">Upgrade Plan</a>
         </div>
-        <a class="user-chip" href="/settings">
+        <button class="user-chip" type="button" data-goto="settings">
           <span class="user-av" id="user-av-side">G</span>
           <span class="user-meta">
             <span class="user-name" id="user-name-side">Guest</span>
             <span class="user-mail" id="user-mail-side">Not signed in</span>
           </span>
-        </a>
+        </button>
       </aside>
 
       <!-- CENTER -->
       <div class="main">
         <div class="topbar">
-          <button class="bell" type="button" aria-label="Activity"><span>&#128276;</span><span class="bdot"></span></button>
-          <a class="user-chip" href="/settings">
+          <button class="bell" type="button" aria-label="Activity" data-goto="messages"><span>&#128276;</span><span class="bdot"></span></button>
+          <button class="user-chip" type="button" data-goto="settings">
             <span class="user-av" id="user-av-top">G</span>
             <span class="user-meta"><span class="user-name" id="user-name-top">Guest</span></span>
-          </a>
+          </button>
         </div>
 
         <!-- ALBUM TAB -->
@@ -220,7 +220,7 @@
 
   <button class="fab" id="fab-add" type="button" aria-label="Add photos">&#43;</button>
 
-  <nav class="tabbar" id="tabbar" style="display:none">
+  <nav class="tabbar" id="tabbar">
     <button class="tabbar-btn active" data-tab="album" type="button"><span class="tb-ico">&#128444;</span><span>Album</span></button>
     <button class="tabbar-btn" data-tab="guests" type="button"><span class="tb-ico">&#128101;</span><span>Guests</span></button>
     <button class="tabbar-btn" data-tab="messages" type="button"><span class="tb-ico">&#128172;</span><span>Messages</span><span class="tb-dot" id="msg-dot" hidden></span></button>
@@ -262,7 +262,7 @@
       </div>
       <div class="success-actions">
         <button class="btn btn-small" id="share-native" type="button">Send to someone</button>
-        <button class="btn btn-small btn-outline" type="button" onclick="window.print()">Print table card</button>
+        <button class="btn btn-small btn-outline" id="share-design" type="button">Design a sign</button>
         <button class="btn btn-small btn-outline" id="share-close" type="button">Close</button>
       </div>
     </div>

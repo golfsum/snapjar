@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design your sign · Snapjar</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/design.css">
+</head>
+<body>
+
+  <div class="design-top">
+    <a class="logo" href="/" >snapjar<span>.</span></a>
+    <span class="grow"></span>
+    <button class="top-btn" id="print-btn" type="button">Print</button>
+    <button class="top-btn primary" id="download-btn" type="button">Download PNG</button>
+  </div>
+
+  <div class="design-wrap">
+
+    <aside class="panel">
+      <h2>Template</h2>
+      <div class="tpl-grid" id="tpl-grid"></div>
+
+      <h2>Your details</h2>
+      <div class="field">
+        <label for="f-heading">Heading</label>
+        <input type="text" id="f-heading" placeholder="Richard &amp; Claudia">
+      </div>
+      <div class="field">
+        <label for="f-label">Table / label</label>
+        <input type="text" id="f-label" placeholder="Table 17">
+        <p class="hint">Photos uploaded from this card are tagged with this name. Guests can rename themselves.</p>
+      </div>
+      <div class="field">
+        <label for="f-sub">Small line</label>
+        <input type="text" id="f-sub" placeholder="Scan to upload your photos">
+      </div>
+
+      <h2>Background</h2>
+      <div class="row" style="margin-bottom:10px">
+        <input type="color" id="bg-color" value="#f7f3ec">
+        <span style="font-size:0.85rem;color:var(--soft)">Background color</span>
+      </div>
+      <button class="pbtn" id="bg-photo-btn" type="button">Add a background photo</button>
+      <button class="pbtn" id="bg-clear-btn" type="button">Remove background photo</button>
+      <div class="slider-row" id="overlay-row" style="display:none">
+        <label>Fade</label>
+        <input type="range" id="bg-fade" min="0" max="80" value="30">
+      </div>
+      <input type="file" id="bg-file" accept="image/*" hidden>
+
+      <h2>Add</h2>
+      <button class="pbtn" id="add-text-btn" type="button">+ Add a text line</button>
+
+      <div class="el-controls hidden" id="el-controls">
+        <h2>Selected item</h2>
+        <div class="slider-row">
+          <label id="size-label">Size</label>
+          <input type="range" id="size-range" min="10" max="120" value="40">
+        </div>
+        <div id="text-only">
+          <div class="row" style="margin-bottom:10px">
+            <input type="color" id="text-color" value="#8a6d4b">
+            <span style="font-size:0.85rem;color:var(--soft)">Text color</span>
+          </div>
+          <div class="field">
+            <label for="font-select">Font</label>
+            <select id="font-select">
+              <option value="'Great Vibes', cursive">Script (Great Vibes)</option>
+              <option value="'Cormorant Garamond', serif">Serif (Cormorant)</option>
+              <option value="'Playfair Display', serif">Serif (Playfair)</option>
+              <option value="'Inter', sans-serif">Sans (Inter)</option>
+            </select>
+          </div>
+          <div class="style-toggles">
+            <button class="tg" id="tg-bold" type="button">B</button>
+            <button class="tg" id="tg-italic" type="button" style="font-style:italic">i</button>
+            <button class="tg" id="tg-caps" type="button">AA</button>
+          </div>
+        </div>
+        <button class="pbtn danger-btn" id="del-el-btn" type="button">Delete this item</button>
+      </div>
+    </aside>
+
+    <div>
+      <div class="stage">
+        <div class="card-canvas" id="canvas">
+          <div class="card-overlay" id="overlay"></div>
+        </div>
+      </div>
+      <p class="stage-hint">Tap an item to select it. Drag to move, drag the blue dot to resize.</p>
+    </div>
+
+  </div>
+
+  <script type="module" src="assets/design.js"></script>
+</body>
+</html>
