@@ -168,6 +168,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); -webk
 .el.image:hover { box-shadow: 0 0 0 1px rgba(47,107,237,0.35); }
 
 .stage.drop-hover .card-canvas { box-shadow: 0 0 0 3px var(--accent), var(--shadow-card); }
+
+/* alignment guides shown while dragging */
+.guide { position: absolute; background: #f5406e; pointer-events: none; z-index: 60; display: none; }
+.guide-v { top: 0; bottom: 0; width: 1px; margin-left: -0.5px; }
+.guide-h { left: 0; right: 0; height: 1px; margin-top: -0.5px; }
 .el.selected { box-shadow: 0 0 0 1.5px var(--accent); }
 .el.text[contenteditable="true"] { cursor: text; box-shadow: 0 0 0 1.5px var(--accent); }
 .el .handle {

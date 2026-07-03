@@ -9,6 +9,35 @@ const code = new URLSearchParams(location.search).get("c");
 const canvas = document.getElementById("canvas");
 const overlay = document.getElementById("overlay");
 
+// ---------- alignment guides ----------
+// Thin lines that appear while dragging, so you can tell when an element lines
+// up with the card center or with another element. Also snaps onto the line.
+const guideV = document.createElement("div"); guideV.className = "guide guide-v";
+const guideH = document.createElement("div"); guideH.className = "guide guide-h";
+canvas.append(guideV, guideH);
+const SNAP = 1.3; // how close (in % of card width) before it clicks into line
+
+function showGuides(vx, hy) {
+  if (vx == null) { guideV.style.display = "none"; }
+  else { guideV.style.left = vx + "%"; guideV.style.display = "block"; }
+  if (hy == null) { guideH.style.display = "none"; }
+  else { guideH.style.top = hy + "%"; guideH.style.display = "block"; }
+}
+function hideGuides() { guideV.style.display = "none"; guideH.style.display = "none"; }
+
+// Snap the dragged element's center to the card center (50) or any other
+// element's center, whichever is within range, and light up the matching line.
+function snapWhileDragging(el, nx, ny) {
+  let x = nx, y = ny, gv = null, gh = null, bestX = SNAP, bestY = SNAP;
+  const others = els.filter((e) => e !== el);
+  const xCands = [50, ...others.map((e) => e.x)];
+  const yCands = [50, ...others.map((e) => e.y)];
+  for (const c of xCands) { const d = Math.abs(nx - c); if (d < bestX) { bestX = d; x = c; gv = c; } }
+  for (const c of yCands) { const d = Math.abs(ny - c); if (d < bestY) { bestY = d; y = c; gh = c; } }
+  showGuides(gv, gh);
+  return { x, y };
+}
+
 // ---------- templates ----------
 // sizes are in cqw (% of card width); positions x/y are % of the card.
 const TEMPLATES = {
@@ -145,11 +174,14 @@ function wireElement(el, handle) {
     try { node.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ }
     const move = (ev) => {
       if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 3) moved = true;
-      el.x = clamp(ox + ((ev.clientX - startX) / rect.width) * 100, 2, 98);
-      el.y = clamp(oy + ((ev.clientY - startY) / rect.height) * 100, 2, 98);
+      const nx = clamp(ox + ((ev.clientX - startX) / rect.width) * 100, 2, 98);
+      const ny = clamp(oy + ((ev.clientY - startY) / rect.height) * 100, 2, 98);
+      const snapped = snapWhileDragging(el, nx, ny);
+      el.x = snapped.x; el.y = snapped.y;
       applyEl(el);
     };
     const up = () => {
+      hideGuides();
       node.removeEventListener("pointermove", move);
       node.removeEventListener("pointerup", up);
       // A click (no drag) on an already-selected text line opens it for editing.
@@ -237,6 +269,11 @@ function selectEl(el) {
   document.getElementById("image-only").style.display = el.type === "image" ? "block" : "none";
   document.getElementById("size-label").textContent =
     el.type === "text" ? "Font" : el.type === "image" ? "Image size" : "QR size";
+  if (el.type === "image") {
+    const rb = document.getElementById("remove-bg-btn");
+    rb.disabled = false;
+    rb.textContent = el.bgRemoved ? "Restore background" : "Remove background";
+  }
   syncControls();
 }
 
@@ -371,11 +408,69 @@ async function addImageEl(file, x = 50, y = 50) {
   let src;
   try { src = await fileToDataUrl(file); }
   catch { alert("Couldn't read that image. Try a JPG or PNG."); return null; }
-  const el = { type: "image", x, y, size: 34, src };
+  const el = { type: "image", x, y, size: 34, src, origSrc: src, bgRemoved: false };
   makeNode(el);
   els.push(el);
   selectEl(el);
   return el;
+}
+
+function setImageSrc(el) {
+  const img = el.node && el.node.querySelector("img");
+  if (img) img.src = el.src;
+}
+
+// Knock out the background of a picture by flood-filling from the edges: any
+// pixel close in color to the corners, and connected to the border, goes
+// transparent. Great for logos and clip art on a solid background. It leaves
+// interior areas alone, so a shape's inside color survives.
+function removeImageBg(dataUrl, tolerance = 46) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth, h = img.naturalHeight;
+        const cv = document.createElement("canvas");
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const image = ctx.getImageData(0, 0, w, h);
+        const px = image.data;
+
+        // Average the four corners for the background color.
+        const corners = [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]];
+        let r = 0, g = 0, b = 0;
+        for (const [cx, cy] of corners) { const i = (cy * w + cx) * 4; r += px[i]; g += px[i + 1]; b += px[i + 2]; }
+        r /= 4; g /= 4; b /= 4;
+
+        const tol2 = tolerance * tolerance;
+        const seen = new Uint8Array(w * h);
+        const stack = [];
+        for (let x = 0; x < w; x++) { stack.push(x, (h - 1) * w + x); }
+        for (let y = 0; y < h; y++) { stack.push(y * w, y * w + (w - 1)); }
+
+        while (stack.length) {
+          const p = stack.pop();
+          if (seen[p]) continue;
+          seen[p] = 1;
+          const i = p * 4;
+          const dr = px[i] - r, dg = px[i + 1] - g, db = px[i + 2] - b;
+          if (dr * dr + dg * dg + db * db > tol2) continue; // hit the subject, stop
+          px[i + 3] = 0; // transparent
+          const x = p % w, y = (p - x) / w;
+          if (x > 0) stack.push(p - 1);
+          if (x < w - 1) stack.push(p + 1);
+          if (y > 0) stack.push(p - w);
+          if (y < h - 1) stack.push(p + w);
+        }
+
+        ctx.putImageData(image, 0, 0);
+        resolve(cv.toDataURL("image/png"));
+      } catch (err) { reject(err); }
+    };
+    img.onerror = () => reject(new Error("unreadable image"));
+    img.src = dataUrl;
+  });
 }
 
 document.getElementById("add-image-btn").addEventListener("click", () => document.getElementById("image-file").click());
@@ -391,6 +486,34 @@ document.getElementById("make-bg-btn").addEventListener("click", () => {
   selected.node.remove();
   els = els.filter((e) => e !== selected);
   deselect();
+});
+
+// Remove background (toggle). Always works from the original so it never
+// compounds, and can be undone.
+document.getElementById("remove-bg-btn").addEventListener("click", async () => {
+  if (!selected || selected.type !== "image") return;
+  const btn = document.getElementById("remove-bg-btn");
+  if (selected.bgRemoved) {
+    selected.src = selected.origSrc;
+    selected.bgRemoved = false;
+    setImageSrc(selected);
+    btn.textContent = "Remove background";
+    return;
+  }
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Removing...";
+  try {
+    selected.src = await removeImageBg(selected.origSrc);
+    selected.bgRemoved = true;
+    setImageSrc(selected);
+    btn.textContent = "Restore background";
+  } catch (err) {
+    console.error("bg removal failed", err);
+    alert("Couldn't process that image. It works best on logos or graphics with a plain background.");
+    btn.textContent = label;
+  }
+  btn.disabled = false;
 });
 
 // Drop pictures straight onto the card. They land where you let go.
