@@ -1,0 +1,275 @@
+/* Snapjar album app skin. Loaded only on the event page, AFTER style.css,
+   to reskin the guest experience to the cool Apple-Photos aesthetic from the
+   mockup without touching the warm marketing pages. Overriding the theme
+   variables re-colors every existing component in one move. */
+
+:root {
+  --paper: #ffffff;
+  --paper-deep: #f2f4f7;
+  --ink: #0b0d12;
+  --ink-soft: #6b7280;
+  --accent: #4f8ef7;
+  --accent-deep: #2f6fd6;
+  --sage: #34c759;
+  --card: #ffffff;
+  --line: #e7e9ec;
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(11, 13, 18, 0.04), 0 10px 30px rgba(11, 13, 18, 0.07);
+  --font-display: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-body: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+}
+
+body { background: var(--paper-deep); color: var(--ink); }
+
+/* hide the marketing top nav; this is an app now */
+.event-main > .nav, body > .nav { display: none; }
+.nav { display: none; }
+
+.event-main {
+  max-width: 640px;
+  padding-left: clamp(14px, 4vw, 22px);
+  padding-right: clamp(14px, 4vw, 22px);
+}
+
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+/* ---------- hero ---------- */
+
+.app-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 2px 20px;
+}
+
+.hero-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent) center/cover no-repeat;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+.hero-info { flex: 1; min-width: 0; }
+.hero-info h1 { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.hero-stats { color: var(--ink-soft); font-size: 0.95rem; margin-top: 3px; }
+.hero-stats b { color: var(--accent); font-weight: 600; }
+
+.hero-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card);
+  color: var(--accent);
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+.hero-icon:active { transform: scale(0.94); }
+
+.guest-upgrade-banner {
+  display: block;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 11px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+/* ---------- live moments card ---------- */
+
+.live-moments {
+  background: var(--card);
+  border: none;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+
+.lm-head { justify-content: flex-start; font-size: 0.95rem; }
+.lm-head::after {
+  content: "Live";
+  margin-left: auto;
+  color: var(--sage);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.lm-dot { background: var(--sage); }
+.lm-av { background: var(--paper-deep); color: var(--accent); }
+.lm-time { color: var(--ink-soft); }
+
+/* ---------- filter pills ---------- */
+
+.chips { margin-top: 20px; }
+
+.chip {
+  border: none;
+  background: var(--paper-deep);
+  color: var(--ink);
+  font-weight: 600;
+  padding: 9px 18px;
+  box-shadow: none;
+}
+.chip.active { background: var(--accent); color: #fff; border: none; }
+
+/* ---------- photo grid ---------- */
+
+.gallery-group { margin-bottom: 22px; }
+
+.group-header {
+  border-bottom: none;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+.group-label { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); font-family: var(--font-body); }
+.group-label .count { color: var(--ink-soft); }
+
+.group-dl {
+  background: var(--paper-deep);
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.gallery { columns: 3 130px; column-gap: 8px; }
+.gallery-item { margin-bottom: 8px; border: none; border-radius: 14px; box-shadow: 0 1px 3px rgba(11,13,18,0.08); }
+.gallery-item.checked { outline: 3px solid var(--accent); }
+
+.gallery-toolbar .mini-btn {
+  background: var(--paper-deep);
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- floating add button ---------- */
+
+.fab {
+  position: fixed;
+  right: max(18px, calc(50vw - 320px + 18px));
+  bottom: 84px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(79, 142, 247, 0.45);
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  padding-bottom: 4px;
+}
+.fab:active { transform: scale(0.94); }
+
+.upload-status { color: var(--accent); }
+.upload-status.upload-error { color: #e5484d; }
+
+/* ---------- bottom tab bar (iOS) ---------- */
+
+.tabbar {
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid var(--line);
+}
+.tabbar-btn { color: var(--ink-soft); font-size: 0.66rem; }
+.tabbar-btn.active { color: var(--accent); }
+.tb-ico { font-size: 1.25rem; }
+.tb-dot { background: #ff3b30; }
+
+@media (min-width: 720px) {
+  .tabbar { max-width: 640px; border-radius: 20px 20px 0 0; }
+}
+
+/* ---------- guests tab ---------- */
+
+.tab-title { font-size: 1.5rem; font-weight: 700; }
+.guest-row { border: none; box-shadow: var(--shadow); border-radius: 16px; }
+.guest-av { background: var(--accent); color: #fff; }
+.guest-row:hover { border: none; }
+
+/* ---------- messages ---------- */
+
+.msg.mine .msg-bubble { background: var(--accent); border: none; color: #fff; }
+.msg-bubble { border: none; box-shadow: 0 1px 2px rgba(11,13,18,0.06); border-radius: 18px; }
+.msg-who { color: var(--accent); }
+.msg.mine .msg-who { color: rgba(255,255,255,0.85); }
+.msg-av { background: var(--accent); color: #fff; }
+.msg-compose input { border: 1px solid var(--line); border-radius: 22px; }
+.msg-del { background: #ff3b30; }
+
+/* ---------- settings list (iOS grouped) ---------- */
+
+.set-list { border: none; box-shadow: var(--shadow); border-radius: 16px; }
+.set-row { border-bottom: 1px solid var(--line); }
+.set-row:hover { background: var(--paper-deep); }
+.set-badge { color: var(--sage); }
+.chev { color: #c3c7cd; }
+
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.set-field label { font-size: 0.8rem; color: var(--ink-soft); font-weight: 600; }
+.set-field input {
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink);
+  outline: none;
+  padding: 0;
+}
+
+/* ---------- photo detail (lightbox, iOS) ---------- */
+
+.lightbox { background: rgba(0, 0, 0, 0.96); flex-direction: column; }
+.lightbox img { border-radius: 12px; }
+
+.lightbox-actions {
+  top: auto;
+  bottom: 22px;
+  right: 50%;
+  transform: translateX(50%);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+}
+.lightbox-actions a, .lightbox-actions button { background: transparent; padding: 9px 16px; }
+.lightbox-actions a:hover, .lightbox-actions button:hover { background: rgba(255,255,255,0.2); }
+#lb-delete { color: #ff453a; }
+
+/* select bar */
+.select-bar { background: rgba(20, 22, 28, 0.96); border-radius: 16px; }
+.select-delete { background: var(--accent); border-color: var(--accent); }
+
+/* limit / share modal panels */
+.share-panel { border-radius: 20px; }
+.report-reasons .btn, #report-cancel, #limit-close {
+  border-radius: 12px;
+}
+
+/* primary buttons go iOS blue */
+.btn { background: var(--accent); border-color: var(--accent); border-radius: 12px; }
+.btn:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+.btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn-outline:hover { background: var(--accent); color: #fff; }

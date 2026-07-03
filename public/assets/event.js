@@ -52,9 +52,7 @@ async function init() {
 
     document.title = `${eventData.name} · Snapjar`;
     document.getElementById("event-title").textContent = eventData.name;
-    document.getElementById("event-meta").textContent = eventData.hostName
-      ? `Hosted by ${eventData.hostName}`
-      : "Tap the button below to add yours";
+    updateHero();
 
     rememberVisit(code, eventData.name);
     countScanIfQr();
@@ -62,6 +60,7 @@ async function init() {
     loadingState.style.display = "none";
     albumView.style.display = "block";
     document.getElementById("tabbar").style.display = "flex";
+    document.getElementById("upload-btn").style.display = "grid";
 
     setupTabs();
     setupSettingsTab();
@@ -117,10 +116,10 @@ function refreshLimitUi() {
   limitNote.style.display = atFreeLimit() ? "block" : "none";
   document.getElementById("upgrade-link").href = upgradeUrlFor(code);
 
-  // Quiet header nudge for guests on an unpaid album.
-  document.getElementById("guest-upgrade").style.display =
-    !isHost && !eventData.paid ? "block" : "none";
-  document.getElementById("guest-upgrade-link").href = upgradeUrlFor(code);
+  // Banner nudge for guests on an unpaid album (it's the <a> itself now).
+  const guestBanner = document.getElementById("guest-upgrade");
+  guestBanner.style.display = !isHost && !eventData.paid ? "block" : "none";
+  guestBanner.href = upgradeUrlFor(code);
 
   // The Settings tab holds the host's upgrade action and the paid badge.
   const setUpgrade = document.getElementById("set-upgrade");
@@ -145,11 +144,37 @@ function watchPhotos() {
     renderGallery();
     renderMoments();
     renderGuests();
+    updateHero();
     emptyGallery.style.display = photoCache.size ? "none" : "block";
     // Keep the local count roughly in sync for the limit check
     eventData.photoCount = snap.size;
     refreshLimitUi();
   });
+}
+
+// Hero: "N Photos · N Guests" and a photo-based avatar, like the mockup.
+function updateHero() {
+  const photos = photoCache.size || eventData.photoCount || 0;
+  const names = new Set();
+  let hasUnnamed = false;
+  let firstUrl = null;
+  for (const d of photoCache.values()) {
+    if (d.uploaderName) names.add(d.uploaderName); else hasUnnamed = true;
+    if (!firstUrl) firstUrl = d.url;
+  }
+  const guests = names.size + (hasUnnamed ? 1 : 0);
+
+  const meta = document.getElementById("event-meta");
+  meta.innerHTML = `<b>${photos}</b> Photo${photos === 1 ? "" : "s"} &middot; <b>${guests}</b> Guest${guests === 1 ? "" : "s"}`;
+
+  const av = document.getElementById("hero-avatar");
+  if (firstUrl) {
+    av.style.backgroundImage = `url("${firstUrl}")`;
+    av.textContent = "";
+  } else {
+    av.style.backgroundImage = "";
+    av.textContent = (eventData.name || "?").trim()[0].toUpperCase();
+  }
 }
 
 // ---------- live moments ----------
@@ -837,6 +862,8 @@ async function doRename() {
 function switchTab(tab) {
   for (const b of document.querySelectorAll(".tabbar-btn")) b.classList.toggle("active", b.dataset.tab === tab);
   for (const p of document.querySelectorAll(".tab-panel")) p.hidden = p.id !== `tab-${tab}`;
+  // The + button only makes sense on the Album tab.
+  document.getElementById("upload-btn").style.display = tab === "album" ? "grid" : "none";
   if (tab === "messages") clearMsgDot();
   window.scrollTo({ top: 0 });
 }

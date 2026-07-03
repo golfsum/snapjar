@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
 
@@ -33,14 +34,18 @@
 
     <div id="album-view" style="display:none">
 
-      <header class="event-header">
-        <p class="eyebrow">You're invited to add photos</p>
-        <h1 id="event-title"></h1>
-        <p class="event-meta" id="event-meta"></p>
-        <div class="header-actions" id="guest-upgrade" style="display:none">
-          <a class="header-upgrade-link" id="guest-upgrade-link" href="#" target="_blank" rel="noopener">Unlock unlimited photos for this album, $19</a>
+      <header class="app-hero">
+        <div class="hero-avatar" id="hero-avatar"></div>
+        <div class="hero-info">
+          <h1 id="event-title"></h1>
+          <p class="hero-stats" id="event-meta"></p>
         </div>
+        <button class="hero-icon" id="share-btn" type="button" aria-label="Share album">&#8593;</button>
       </header>
+
+      <a class="guest-upgrade-banner" id="guest-upgrade" href="#" target="_blank" rel="noopener" style="display:none">
+        <span id="guest-upgrade-link">Unlock unlimited photos for this album, $19</span>
+      </a>
 
       <!-- ALBUM TAB -->
       <section class="tab-panel" id="tab-album">
@@ -55,13 +60,7 @@
           <a href="/#pricing" id="upgrade-link" target="_blank" rel="noopener">Upgrade</a>
         </div>
 
-        <div class="upload-bar">
-          <input type="text" id="guest-name" placeholder="Name (optional)" maxlength="30">
-          <button class="btn" id="upload-btn" type="button">Add photos</button>
-          <button class="btn btn-outline" id="share-btn" type="button">Share</button>
-          <input type="file" id="file-input" accept="image/*" multiple hidden>
-        </div>
-
+        <input type="file" id="file-input" accept="image/*" multiple hidden>
         <p class="upload-status" id="upload-status"></p>
 
         <div class="chips" id="chips">
@@ -104,6 +103,10 @@
       <section class="tab-panel" id="tab-settings" hidden>
         <h2 class="tab-title">Album</h2>
         <div class="set-list">
+          <div class="set-field">
+            <label for="guest-name">Your name (shown on your photos)</label>
+            <input type="text" id="guest-name" placeholder="Add your name" maxlength="30">
+          </div>
           <button class="set-row" id="set-share" type="button"><span>Share album</span><span class="chev">&#8250;</span></button>
           <button class="set-row" id="set-download" type="button"><span>Download all photos</span><span class="chev">&#8250;</span></button>
           <button class="set-row" id="set-rename" type="button" hidden><span>Rename album</span><span class="chev">&#8250;</span></button>
@@ -117,6 +120,8 @@
 
     </div>
   </main>
+
+  <button class="fab" id="upload-btn" type="button" aria-label="Add photos" style="display:none">+</button>
 
   <nav class="tabbar" id="tabbar" style="display:none">
     <button class="tabbar-btn active" data-tab="album" type="button"><span class="tb-ico">&#9635;</span><span>Album</span></button>
