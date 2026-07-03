@@ -140,6 +140,7 @@ function makeNode(el) {
     const img = document.createElement("img");
     img.id = "qr-img";
     img.alt = "QR code";
+    img.draggable = false;
     if (qrDataUrl) img.src = qrDataUrl;
     node.appendChild(img);
   }
@@ -165,7 +166,8 @@ function wireElement(el) {
   const node = el.node;
 
   node.addEventListener("pointerdown", (e) => {
-    if (e.target === handle) return;
+    // The resize handle stops propagation itself, so a press that reaches here
+    // is always a move, never a resize.
     if (node.isContentEditable) return;
     e.preventDefault();
     const wasSelected = selected === el;
@@ -532,6 +534,13 @@ document.getElementById("remove-bg-btn").addEventListener("click", async () => {
   }
   btn.disabled = false;
 });
+
+// Block the browser's native drag of anything inside the card. Elements move
+// with our own pointer logic; without this, dragging an <img> (the QR or a
+// picture) starts an HTML5 image drag that hijacks the move and, when dropped
+// back on the card, gets re-added as a duplicate. External file drags come
+// from outside the page, so they never fire dragstart here and still work.
+stageEl.addEventListener("dragstart", (e) => e.preventDefault());
 
 // Drop pictures straight onto the card. They land where you let go.
 const dropTargets = [stageEl, canvas];
