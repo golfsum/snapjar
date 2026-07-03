@@ -860,18 +860,18 @@ function openLimitModal(reason) {
   if (reason === "download") {
     title.textContent = "Download all is a Party perk";
     copy.textContent = isHost
-      ? "Grab every photo in one zip when you unlock this album for $19, one time. You can still download photos one by one for free."
-      : "Downloading the whole album at once is a Party perk. The host can unlock it for $19, or you can. Single photos are always free to save.";
+      ? "Grab every photo in one zip when you unlock this album for $19.99, one time. You can still download photos one by one for free."
+      : "Downloading the whole album at once is a Party perk. The host can unlock it for $19.99, or you can. Single photos are always free to save.";
   } else {
     title.textContent = isHost ? "Your album is full" : "This album is full";
     copy.textContent = isHost
-      ? "Free albums hold 25 photos and yours just hit the ceiling. Unlock unlimited photos and a full year of gallery time for $19, one time."
-      : "Free albums hold 25 photos and this one is maxed out. The host can unlock unlimited photos for $19, or you can be the hero and do it for them.";
+      ? "Free albums hold 25 photos and yours just hit the ceiling. Unlock unlimited photos and a full year of gallery time for $19.99, one time."
+      : "Free albums hold 25 photos and this one is maxed out. The host can unlock unlimited photos for $19.99, or you can be the hero and do it for them.";
   }
 
   const up = document.getElementById("limit-upgrade");
   up.href = upgradeUrlFor(code);
-  up.textContent = isHost ? "Unlock unlimited, $19" : "Unlock it, $19";
+  up.textContent = isHost ? "Unlock unlimited, $19.99" : "Unlock it, $19.99";
 
   limitModal.classList.add("open");
   track("paywall_shown", { album: code, role: isHost ? "host" : "guest", reason: reason || "full" });

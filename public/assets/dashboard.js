@@ -13,7 +13,13 @@ import {
 
 let reports = [];
 
-const PRICE = 19;
+const PARTY_PRICE = 19.99;
+const PRO_PRICE = 29.99;
+
+// A Pro album paid the Pro price; a plain paid album paid the Party price.
+function albumRevenue(a) {
+  return a.pro ? PRO_PRICE : (a.paid ? PARTY_PRICE : 0);
+}
 const AVG_MB = 0.35; // rough compressed-photo size, for the storage estimate
 
 const gateView = document.getElementById("gate-view");
@@ -124,6 +130,8 @@ function renderStats() {
   const totalScans = albums.reduce((s, a) => s + (a.scanCount || 0), 0);
   const totalDownloads = albums.reduce((s, a) => s + (a.downloadCount || 0), 0);
   const paid = albums.filter((a) => a.paid).length;
+  const proCount = albums.filter((a) => a.pro).length;
+  const revenue = albums.reduce((s, a) => s + albumRevenue(a), 0);
   const now = Date.now();
   const weekAgo = now - 7 * 86400000;
   const weekCount = albums.filter((a) => toMillis(a.createdAt) > weekAgo).length;
@@ -143,8 +151,8 @@ function renderStats() {
     },
     {
       label: "Revenue",
-      num: "$" + (paid * PRICE).toLocaleString(),
-      sub: `${paid} paid &middot; ${conv}% of albums`
+      num: "$" + revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      sub: `${paid} paid${proCount ? ` &middot; ${proCount} Pro` : ""} &middot; ${conv}% of albums`
     },
     {
       label: "QR scans",
@@ -458,7 +466,7 @@ async function setPaid(album, paid, btn) {
   }
 }
 
-// Pro ($29) includes Party benefits, so granting Pro also marks the album paid.
+// Pro ($29.99) includes Party benefits, so granting Pro also marks the album paid.
 async function setPro(album, pro, btn) {
   btn.disabled = true;
   try {

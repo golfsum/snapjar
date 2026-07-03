@@ -11,7 +11,7 @@ import {
   collection, query, orderBy, limit, getDocs, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const PRICE = 19;
+const PRICE = 19.99;
 
 const gateView = document.getElementById("gate-view");
 const loadingView = document.getElementById("loading-view");

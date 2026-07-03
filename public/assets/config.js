@@ -1,14 +1,13 @@
 // One place for settings both pages share.
 
-// The $19 Party upgrade. Album codes ride along as client_reference_id,
+// The $19.99 Party upgrade. Album codes ride along as client_reference_id,
 // so every payment in the Stripe dashboard says which album bought it.
 export const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/8x2aEQfRgcP331bdEn2sM01";
 
-// The $29 Pro upgrade (unlocks the Table QR Manager). Paste your $29 Stripe
-// Payment Link here. Until then, Pro buttons fall back to the pricing page.
-export const PRO_PAYMENT_LINK = "";
-export const PRO_PRICE = 29;
-export const PARTY_PRICE = 19;
+// The $29.99 Pro upgrade (unlocks the Table QR Manager).
+export const PRO_PAYMENT_LINK = "https://buy.stripe.com/bJe3coeNc2ap7hreIr2sM02";
+export const PRO_PRICE = 29.99;
+export const PARTY_PRICE = 19.99;
 
 // The only Google account the admin dashboard accepts. Must match the
 // email in firestore.rules or the dashboard queries get denied.

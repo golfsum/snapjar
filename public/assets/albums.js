@@ -130,7 +130,7 @@ async function fillStatus(album, statusEl, actionsEl, cardEl, isMine) {
       upgrade.href = upgradeUrlFor(album.code);
       upgrade.target = "_blank";
       upgrade.rel = "noopener";
-      upgrade.textContent = isMine ? "Upgrade, $19" : "Gift unlimited, $19";
+      upgrade.textContent = isMine ? "Upgrade, $19.99" : "Gift unlimited, $19.99";
       upgrade.addEventListener("click", () =>
         track("upgrade_click", { album: album.code, from: "albums-page" }));
       actionsEl.appendChild(upgrade);
