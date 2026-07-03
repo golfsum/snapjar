@@ -80,6 +80,11 @@ function applyEl(el) {
     if (node.firstChild?.nodeType !== 3 || node.textContent !== el.text) {
       if (document.activeElement !== node) node.textContent = el.text;
     }
+    // An empty line (a cleared table label, say) just disappears. It comes
+    // back the moment you type. Elements are absolutely positioned, so hiding
+    // one leaves no gap. Stay visible while it's being edited so you can type.
+    const editing = document.activeElement === node;
+    node.style.display = (!editing && !(el.text || "").trim()) ? "none" : "";
   } else if (el.type === "qr" || el.type === "image") {
     node.style.width = el.size + "%";
   }
@@ -182,6 +187,7 @@ function wireElement(el, handle) {
       if (el.core === "heading") document.getElementById("f-heading").value = el.text;
       if (el.core === "label") { document.getElementById("f-label").value = el.text; regenQr(); }
       if (el.core === "sub") document.getElementById("f-sub").value = el.text;
+      applyEl(el);
     });
   }
 }
@@ -270,6 +276,16 @@ function toggleStyle(k) { if (!selected) return; selected[k] = !selected[k]; app
 
 document.getElementById("del-el-btn").addEventListener("click", () => {
   if (!selected) return;
+  // The table label is optional, so Delete just clears it (type in the field
+  // to bring it back). The other core lines stay put.
+  if (selected.core === "label") {
+    selected.text = "";
+    document.getElementById("f-label").value = "";
+    applyEl(selected);
+    regenQr();
+    deselect();
+    return;
+  }
   if (selected.core) { alert("This is one of your main lines. Clear its text in the field on the left instead."); return; }
   selected.node.remove();
   els = els.filter((e) => e !== selected);
