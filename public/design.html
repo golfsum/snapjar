@@ -23,52 +23,65 @@
   <div class="design-wrap">
 
     <aside class="panel">
-      <h2>Template</h2>
-      <div class="tpl-grid" id="tpl-grid"></div>
+      <section class="side-card">
+        <h2>Templates</h2>
+        <p class="section-help">Pick a style, then make it yours.</p>
+        <div class="tpl-grid" id="tpl-grid"></div>
+      </section>
 
-      <h2>Your details</h2>
-      <div class="field">
-        <label for="f-heading">Heading</label>
-        <input type="text" id="f-heading" placeholder="Richard &amp; Claudia">
-      </div>
-      <div class="field">
-        <label for="f-label">Table / label</label>
-        <input type="text" id="f-label" placeholder="Table 17">
-        <p class="hint">Photos uploaded from this card are tagged with this name. Guests can rename themselves.</p>
-      </div>
-      <div class="field">
-        <label for="f-sub">Small line</label>
-        <input type="text" id="f-sub" placeholder="Scan to upload your photos">
-      </div>
+      <section class="side-card">
+        <h2>Sign Details</h2>
+        <p class="section-help">The words on your card.</p>
+        <div class="field">
+          <label for="f-heading">Heading</label>
+          <input type="text" id="f-heading" placeholder="Richard &amp; Claudia">
+        </div>
+        <div class="field">
+          <label for="f-label">Table / label</label>
+          <input type="text" id="f-label" placeholder="Table 17">
+          <p class="hint">Photos uploaded from this card are tagged with this name. Guests can rename themselves.</p>
+        </div>
+        <div class="field">
+          <label for="f-sub">Small line</label>
+          <input type="text" id="f-sub" placeholder="Scan to upload your photos">
+        </div>
+      </section>
 
-      <h2>Background</h2>
-      <div class="row" style="margin-bottom:10px">
-        <input type="color" id="bg-color" value="#f7f3ec">
-        <span style="font-size:0.85rem;color:var(--soft)">Background color</span>
-      </div>
-      <button class="pbtn" id="bg-photo-btn" type="button">Add a background photo</button>
-      <button class="pbtn" id="bg-clear-btn" type="button">Remove background photo</button>
-      <div class="slider-row" id="overlay-row" style="display:none">
-        <label>Fade</label>
-        <input type="range" id="bg-fade" min="0" max="80" value="30">
-      </div>
-      <input type="file" id="bg-file" accept="image/*" hidden>
+      <section class="side-card">
+        <h2>Background</h2>
+        <p class="section-help">A color or your own photo.</p>
+        <div class="row">
+          <input type="color" id="bg-color" value="#f7f3ec">
+          <span class="row-label">Background color</span>
+        </div>
+        <button class="pbtn" id="bg-photo-btn" type="button">Add a background photo</button>
+        <button class="pbtn" id="bg-clear-btn" type="button">Remove background photo</button>
+        <div class="slider-row" id="overlay-row" style="display:none; margin-top:14px; margin-bottom:0">
+          <label>Fade</label>
+          <input type="range" id="bg-fade" min="0" max="80" value="30">
+        </div>
+        <input type="file" id="bg-file" accept="image/*" hidden>
+      </section>
 
-      <h2>Add</h2>
-      <button class="pbtn" id="add-text-btn" type="button">+ Add a text line</button>
+      <section class="side-card">
+        <h2>Additional Text</h2>
+        <p class="section-help">Add extra lines like a date or venue.</p>
+        <button class="pbtn" id="add-text-btn" type="button" style="margin-top:0">+ Add a text line</button>
+      </section>
 
-      <div class="el-controls hidden" id="el-controls">
+      <section class="side-card el-controls hidden" id="el-controls">
         <h2>Selected item</h2>
+        <p class="section-help">Adjust the item you tapped.</p>
         <div class="slider-row">
           <label id="size-label">Size</label>
           <input type="range" id="size-range" min="10" max="120" value="40">
         </div>
         <div id="text-only">
-          <div class="row" style="margin-bottom:10px">
+          <div class="row">
             <input type="color" id="text-color" value="#8a6d4b">
-            <span style="font-size:0.85rem;color:var(--soft)">Text color</span>
+            <span class="row-label">Text color</span>
           </div>
-          <div class="field">
+          <div class="field" style="margin-top:8px">
             <label for="font-select">Font</label>
             <select id="font-select">
               <option value="'Great Vibes', cursive">Script (Great Vibes)</option>
@@ -84,16 +97,27 @@
           </div>
         </div>
         <button class="pbtn danger-btn" id="del-el-btn" type="button">Delete this item</button>
-      </div>
+      </section>
     </aside>
 
-    <div>
-      <div class="stage">
+    <div class="stage-area">
+      <div class="preview-toolbar">
+        <button class="pt-btn" id="zoom-out" type="button" aria-label="Zoom out">&#8722;</button>
+        <span class="pt-zoom" id="zoom-level">100%</span>
+        <button class="pt-btn" id="zoom-in" type="button" aria-label="Zoom in">&#43;</button>
+        <span class="pt-sep"></span>
+        <button class="pt-btn text" id="zoom-reset" type="button">Reset</button>
+        <button class="pt-btn text" id="zoom-center" type="button">Center</button>
+        <span class="pt-sep"></span>
+        <button class="pt-btn" id="grid-toggle" type="button" aria-label="Toggle grid">&#9636;</button>
+      </div>
+
+      <div class="stage" id="stage">
         <div class="card-canvas" id="canvas">
           <div class="card-overlay" id="overlay"></div>
         </div>
       </div>
-      <p class="stage-hint">Tap an item to select it. Drag to move, drag the blue dot to resize.</p>
+      <p class="stage-hint">Click any text to edit it. Drag to move, drag the blue dot to resize.</p>
     </div>
 
   </div>

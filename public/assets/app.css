@@ -162,6 +162,41 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .share-split { display: inline-flex; }
 .share-split .btn { border-radius: 10px; }
 
+/* modernized share dialog */
+.share-panel-v2 {
+  position: relative;
+  max-width: 380px;
+  width: 100%;
+  padding: 28px 28px 24px;
+  border-radius: 20px;
+  text-align: center;
+}
+.share-panel-v2 .share-x {
+  position: absolute; top: 16px; right: 16px;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: var(--paper-deep); color: var(--ink-soft);
+  font-size: 1.2rem; line-height: 1; cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.share-panel-v2 .share-x:hover { background: var(--line); color: var(--ink); }
+.share-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; }
+.share-panel-v2 .qr-wrap { margin: 0 auto 22px; padding: 18px; }
+.share-panel-v2 .qr-wrap img { width: 216px; height: 216px; }
+.qr-scan-hint { font-size: 0.82rem; color: var(--ink-soft); margin-top: 8px; }
+.share-field { text-align: left; margin-bottom: 22px; }
+.share-field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 7px; }
+.share-actions-v2 { display: flex; flex-direction: column; gap: 10px; }
+.share-actions-v2 .btn { width: 100%; }
+
+/* guest upgrade nudge */
+.guest-upgrade-banner {
+  display: block; text-align: center; text-decoration: none;
+  background: var(--accent-soft); color: var(--accent-deep);
+  border: 1px solid #d4e2fb; border-radius: 12px;
+  padding: 11px 16px; font-weight: 600; font-size: 0.9rem; margin-bottom: 20px;
+}
+.guest-upgrade-banner:hover { background: #e2edfe; }
+
 /* live activity */
 .live-moments { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 20px; }
 .lm-head { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
@@ -279,12 +314,21 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
   .side { display: none; }
   .main { padding: 14px 16px 96px; }
   .topbar { display: none; }
-  .album-head { gap: 14px; }
-  .cover { width: 76px; height: 76px; font-size: 1.4rem; }
-  .ahead-title h1 { font-size: 1.35rem; }
   .astack { display: none; }
   .tabbar { display: flex; }
   .fab { display: grid; }
+
+  /* Cover + title on row 1, stats full width under it, Share full width below.
+     Keeps Photos/Guests/Views on a single tidy line instead of stacking. */
+  .album-head { flex-wrap: wrap; align-items: center; gap: 12px 14px; margin-bottom: 18px; }
+  .cover { width: 58px; height: 58px; font-size: 1.3rem; }
+  .ahead-info { flex: 1 1 auto; min-width: 0; }
+  .ahead-title h1 { font-size: 1.3rem; }
+  .ahead-sub { margin: 4px 0 10px; font-size: 0.86rem; }
+  .ahead-stats { gap: 8px 16px; }
+  .ahead-stat { font-size: 0.88rem; }
+  .ahead-actions { order: 5; flex: 1 1 100%; }
+  .ahead-actions .btn { width: 100%; padding: 12px; }
 }
 
 /* floating add + bottom tab bar (mobile) reuse styles */

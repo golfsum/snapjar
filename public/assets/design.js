@@ -12,32 +12,46 @@ const overlay = document.getElementById("overlay");
 // ---------- templates ----------
 // sizes are in cqw (% of card width); positions x/y are % of the card.
 const TEMPLATES = {
-  elegant: {
-    name: "Elegant", bg: "#f7f3ec",
+  rustic: {
+    name: "Rustic", tag: "Warm & handwritten", bg: "#f7f3ec",
     heading: { text: "Richard & Claudia", font: "'Great Vibes', cursive", color: "#8a6d4b", size: 17, x: 50, y: 20 },
     label:   { text: "Table 17", font: "'Cormorant Garamond', serif", color: "#2f2a24", size: 13, x: 50, y: 42, bold: true },
     sub:     { text: "Scan to upload your photos", font: "'Cormorant Garamond', serif", color: "#8a6d4b", size: 4.4, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 67, size: 44 }
   },
-  classic: {
-    name: "Classic", bg: "#ffffff",
-    heading: { text: "The Wedding of", font: "'Cormorant Garamond', serif", color: "#111111", size: 6, x: 50, y: 14, caps: true },
-    label:   { text: "Emily & Jake", font: "'Playfair Display', serif", color: "#111111", size: 11, x: 50, y: 26, bold: true },
-    sub:     { text: "Scan to share your photos", font: "'Inter', sans-serif", color: "#555555", size: 3.6, x: 50, y: 90, caps: true },
-    qr: { x: 50, y: 62, size: 46 }
+  modern: {
+    name: "Modern", tag: "Clean & minimal", bg: "#ffffff",
+    heading: { text: "EMILY & JAKE", font: "'Inter', sans-serif", color: "#111111", size: 6.5, x: 50, y: 16, bold: true, caps: true },
+    label:   { text: "Table 04", font: "'Inter', sans-serif", color: "#111111", size: 13, x: 50, y: 33, bold: true },
+    sub:     { text: "Scan to upload your photos", font: "'Inter', sans-serif", color: "#8a8a8a", size: 3.4, x: 50, y: 90, caps: true },
+    qr: { x: 50, y: 63, size: 44 }
   },
-  midnight: {
-    name: "Midnight", bg: "#141b2e",
+  classic: {
+    name: "Classic", tag: "Timeless serif", bg: "#fbfaf7",
+    heading: { text: "The Wedding of", font: "'Cormorant Garamond', serif", color: "#1a1a1a", size: 5.6, x: 50, y: 15, caps: true },
+    label:   { text: "Emily & Jake", font: "'Playfair Display', serif", color: "#1a1a1a", size: 11, x: 50, y: 27, bold: true },
+    sub:     { text: "Scan to share your photos", font: "'Playfair Display', serif", color: "#555555", size: 3.8, x: 50, y: 90, caps: true },
+    qr: { x: 50, y: 63, size: 46 }
+  },
+  blacktie: {
+    name: "Black Tie", tag: "Elegant & dark", bg: "#141b2e",
     heading: { text: "Celebrate", font: "'Great Vibes', cursive", color: "#e7c98a", size: 16, x: 50, y: 19 },
     label:   { text: "Table 4", font: "'Playfair Display', serif", color: "#ffffff", size: 12, x: 50, y: 41, bold: true },
     sub:     { text: "Scan to add your photos", font: "'Inter', sans-serif", color: "#c8cede", size: 3.8, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 66, size: 44 }
   },
-  blush: {
-    name: "Blush", bg: "#f6e7e4",
-    heading: { text: "Sweet Sixteen", font: "'Great Vibes', cursive", color: "#c26b73", size: 16, x: 50, y: 20 },
-    label:   { text: "Table 8", font: "'Cormorant Garamond', serif", color: "#5a3b3e", size: 12, x: 50, y: 42, bold: true },
-    sub:     { text: "Scan to upload photos", font: "'Cormorant Garamond', serif", color: "#c26b73", size: 4.2, x: 50, y: 90, caps: true },
+  garden: {
+    name: "Garden", tag: "Fresh & botanical", bg: "#eef3ea",
+    heading: { text: "In Full Bloom", font: "'Great Vibes', cursive", color: "#5f7350", size: 16, x: 50, y: 20 },
+    label:   { text: "Table 8", font: "'Cormorant Garamond', serif", color: "#354a2c", size: 12, x: 50, y: 42, bold: true },
+    sub:     { text: "Scan to upload photos", font: "'Cormorant Garamond', serif", color: "#5f7350", size: 4.2, x: 50, y: 90, caps: true },
+    qr: { x: 50, y: 67, size: 44 }
+  },
+  coastal: {
+    name: "Coastal", tag: "Soft & seaside", bg: "#eef3f7",
+    heading: { text: "By the Sea", font: "'Great Vibes', cursive", color: "#3a6b8a", size: 16, x: 50, y: 20 },
+    label:   { text: "Table 6", font: "'Cormorant Garamond', serif", color: "#243d4e", size: 12, x: 50, y: 42, bold: true },
+    sub:     { text: "Scan to upload photos", font: "'Cormorant Garamond', serif", color: "#3a6b8a", size: 4.2, x: 50, y: 90, caps: true },
     qr: { x: 50, y: 67, size: 44 }
   }
 };
@@ -111,17 +125,25 @@ function wireElement(el, handle) {
     if (e.target === handle) return;
     if (node.isContentEditable) return;
     e.preventDefault();
+    const wasSelected = selected === el;
     selectEl(el);
     const rect = canvas.getBoundingClientRect();
     const startX = e.clientX, startY = e.clientY;
     const ox = el.x, oy = el.y;
+    let moved = false;
     node.setPointerCapture(e.pointerId);
     const move = (ev) => {
+      if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 3) moved = true;
       el.x = clamp(ox + ((ev.clientX - startX) / rect.width) * 100, 2, 98);
       el.y = clamp(oy + ((ev.clientY - startY) / rect.height) * 100, 2, 98);
       applyEl(el);
     };
-    const up = () => { node.removeEventListener("pointermove", move); node.removeEventListener("pointerup", up); };
+    const up = () => {
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerup", up);
+      // A click (no drag) on an already-selected text line opens it for editing.
+      if (!moved && wasSelected && el.type === "text") startEditing(node);
+    };
     node.addEventListener("pointermove", move);
     node.addEventListener("pointerup", up);
   });
@@ -146,11 +168,7 @@ function wireElement(el, handle) {
   });
 
   if (el.type === "text") {
-    node.addEventListener("dblclick", () => {
-      node.contentEditable = "true";
-      node.focus();
-      document.execCommand?.("selectAll", false, null);
-    });
+    node.addEventListener("dblclick", () => startEditing(node));
     node.addEventListener("blur", () => {
       node.contentEditable = "false";
       el.text = node.textContent.trim();
@@ -162,6 +180,36 @@ function wireElement(el, handle) {
 }
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function startEditing(node) {
+  node.contentEditable = "true";
+  node.focus();
+  try { document.execCommand("selectAll", false, null); } catch { /* ignore */ }
+}
+
+// ---------- preview toolbar: zoom, center, grid ----------
+
+const BASE_W = 520;
+let zoom = 1;
+const stageEl = document.getElementById("stage");
+
+function applyZoom() {
+  canvas.style.width = Math.round(BASE_W * zoom) + "px";
+  document.getElementById("zoom-level").textContent = Math.round(zoom * 100) + "%";
+}
+function centerStage() {
+  stageEl.scrollLeft = Math.max(0, (canvas.offsetWidth - stageEl.clientWidth) / 2);
+  stageEl.scrollTop = 0;
+}
+document.getElementById("zoom-in").addEventListener("click", () => { zoom = clamp(zoom + 0.1, 0.4, 2); applyZoom(); });
+document.getElementById("zoom-out").addEventListener("click", () => { zoom = clamp(zoom - 0.1, 0.4, 2); applyZoom(); });
+document.getElementById("zoom-reset").addEventListener("click", () => { zoom = 1; applyZoom(); centerStage(); });
+document.getElementById("zoom-center").addEventListener("click", centerStage);
+document.getElementById("grid-toggle").addEventListener("click", (e) => {
+  stageEl.classList.toggle("grid-on");
+  e.currentTarget.classList.toggle("on");
+});
+applyZoom();
 
 // ---------- selection + controls ----------
 
@@ -315,7 +363,7 @@ for (const [id, t] of Object.entries(TEMPLATES)) {
   b.dataset.tpl = id;
   b.style.background = t.bg;
   b.style.color = t.label.color;
-  b.innerHTML = `<span class="tpl-name" style="font-family:${t.heading.font}">${t.name}</span><span style="font-size:0.62rem">Table card</span>`;
+  b.innerHTML = `<span class="tpl-name" style="font-family:${t.heading.font}">${t.name}</span><span class="tpl-tag">${t.tag}</span>`;
   b.addEventListener("click", () => buildTemplate(id));
   tplGrid.appendChild(b);
 }
@@ -345,7 +393,7 @@ document.getElementById("download-btn").addEventListener("click", async () => {
 // ---------- init ----------
 
 (async function init() {
-  buildTemplate("elegant");
+  buildTemplate("rustic");
   try {
     await ensureSignedIn();
     if (code) {

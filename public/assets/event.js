@@ -1331,6 +1331,15 @@ document.getElementById("share-native").addEventListener("click", async () => {
   }
 });
 
+document.getElementById("share-download-qr").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = document.getElementById("share-qr").src;
+  a.download = `${safeName(eventData.name)}-qr.png`;
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
 for (const id of ["upgrade-link", "guest-upgrade", "st-upgrade"]) {
   const el = document.getElementById(id);
   if (el) el.addEventListener("click", () => track("upgrade_click", { album: code, from: id }));
