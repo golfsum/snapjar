@@ -1,0 +1,11 @@
+{
+  "name": "snapjar",
+  "private": true,
+  "scripts": {
+    "vercel-build": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "stripe": "^17.7.0"
+  }
+}

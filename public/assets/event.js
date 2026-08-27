@@ -106,8 +106,6 @@ function avatarForName(name) {
 
 guestNameInput.value = profile.name || "";
 
-init();
-
 async function init() {
   if (!code) return showMissing();
 
@@ -154,8 +152,10 @@ async function init() {
     }
     if (location.hash === "#share") openShare();
 
+    watchEvent();
     watchPhotos();
     watchMessages();
+    maybeCelebrateFromUrl();
   } catch (err) {
     console.error(err);
     showMissing();
@@ -267,6 +267,120 @@ function refreshLimitUi() {
   if (isHost && !eventData.paid) { stUpgrade.style.display = ""; stUpgrade.href = upgradeUrlFor(code); }
   else { stUpgrade.style.display = "none"; }
 }
+
+let didCelebrateUnlock = false;
+
+function maybeCelebrateFromUrl() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("unlocked") !== "1") return;
+  params.delete("unlocked");
+  const qs = params.toString();
+  history.replaceState(null, "", `${location.pathname}${qs ? "?" + qs : ""}${location.hash}`);
+  celebrateUnlock();
+}
+
+function watchEvent() {
+  onSnapshot(doc(db, "events", code), (snap) => {
+    if (!snap.exists()) return;
+    const wasPaid = !!(eventData && eventData.paid);
+    eventData = { ...eventData, ...snap.data() };
+    isHost = eventData.hostUid === currentUser.uid;
+    refreshLimitUi();
+    updateHero();
+    if (!wasPaid && eventData.paid && isHost) celebrateUnlock();
+  }, (err) => console.error("event watch failed", err));
+}
+
+function celebrateUnlock() {
+  if (didCelebrateUnlock) return;
+  didCelebrateUnlock = true;
+  const modal = document.getElementById("unlock-modal");
+  if (!modal) return;
+  const kicker = modal.querySelector(".unlock-kicker");
+  if (kicker) kicker.textContent = eventData?.pro ? "Pro plan" : "Party plan";
+  modal.classList.add("open");
+  burstConfetti(document.getElementById("unlock-confetti"));
+  track("album_unlocked", { album: code });
+}
+
+function closeUnlockModal() {
+  const modal = document.getElementById("unlock-modal");
+  if (modal) modal.classList.remove("open");
+}
+
+document.getElementById("unlock-close")?.addEventListener("click", closeUnlockModal);
+document.getElementById("unlock-add")?.addEventListener("click", () => {
+  closeUnlockModal();
+  onAddPhotos();
+});
+document.getElementById("unlock-modal")?.addEventListener("click", (e) => {
+  if (e.target.id === "unlock-modal") closeUnlockModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeUnlockModal();
+});
+
+function burstConfetti(canvas) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const colors = ["#2f6bed", "#12b76a", "#f5a623", "#f04438", "#7c3aed", "#ffffff"];
+  const pieces = [];
+  const count = 120;
+  let running = true;
+
+  function size() {
+    canvas.width = canvas.clientWidth * devicePixelRatio;
+    canvas.height = canvas.clientHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  size();
+
+  const w = () => canvas.clientWidth;
+  const h = () => canvas.clientHeight;
+  for (let i = 0; i < count; i++) {
+    pieces.push({
+      x: w() * 0.5 + (Math.random() - 0.5) * 80,
+      y: h() * 0.35,
+      vx: (Math.random() - 0.5) * 14,
+      vy: Math.random() * -11 - 4,
+      g: 0.22 + Math.random() * 0.12,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.35,
+      w: 6 + Math.random() * 6,
+      h: 8 + Math.random() * 8,
+      color: colors[i % colors.length],
+      life: 0
+    });
+  }
+
+  function frame() {
+    if (!running) return;
+    ctx.clearRect(0, 0, w(), h());
+    let alive = false;
+    for (const p of pieces) {
+      p.life++;
+      p.vy += p.g;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      const alpha = Math.max(0, 1 - p.life / 90);
+      if (alpha <= 0) continue;
+      alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (alive) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  setTimeout(() => { running = false; ctx.clearRect(0, 0, w(), h()); }, 2800);
+}
+
+init();
 
 // ---------- favorites (local, per device) ----------
 
@@ -396,6 +510,9 @@ function watchPhotos() {
     // Keep the local count roughly in sync for the limit check
     eventData.photoCount = snap.size;
     refreshLimitUi();
+  }, (err) => {
+    console.error("photos watch failed", err);
+    renderGallery();
   });
 }
 
@@ -596,8 +713,16 @@ function renderGallery() {
     const box = document.createElement("div");
     box.className = "empty-pic";
     const msg = searchTerm ? "No photos match that name."
-      : (EMPTY_STATES[activeFilter] || "No photos yet. Tap Add Photos to start the album.");
+      : (EMPTY_STATES[activeFilter] || "No photos yet. Tap Add photos to start the album.");
     box.innerHTML = `<div class="frame">&#128247;</div><p>${msg}</p>`;
+    if (!searchTerm && (activeFilter === "all" || !EMPTY_STATES[activeFilter])) {
+      const add = document.createElement("button");
+      add.className = "btn";
+      add.type = "button";
+      add.textContent = "Add photos";
+      add.addEventListener("click", onAddPhotos);
+      box.appendChild(add);
+    }
     gallery.appendChild(box);
     document.getElementById("gallery-toolbar").style.display = photoCache.size ? "flex" : "none";
     refreshSelectUi();
@@ -943,6 +1068,8 @@ function onAddPhotos() {
 }
 uploadBtn.addEventListener("click", onAddPhotos);
 document.getElementById("fab-add").addEventListener("click", onAddPhotos);
+const emptyAddBtn = document.getElementById("empty-add-btn");
+if (emptyAddBtn) emptyAddBtn.addEventListener("click", onAddPhotos);
 
 // The paywall. Hosts get the upgrade button; guests are told to ask the host,
 // with no pay button of their own.

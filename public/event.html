@@ -125,6 +125,7 @@
           <div class="empty-gallery" id="empty-gallery" style="display:none">
             <div class="big">&#128247;</div>
             <p><strong>No photos yet.</strong> Be the first, set the tone for the whole album.</p>
+            <button class="btn" id="empty-add-btn" type="button">Add photos</button>
           </div>
 
           <div class="gallery-toolbar" id="gallery-toolbar" style="display:none">
@@ -242,6 +243,17 @@
       <button class="btn btn-small btn-outline" id="select-download" type="button" disabled>Download</button>
       <button class="btn btn-small select-delete" id="select-delete" type="button" disabled>Delete</button>
       <button class="btn btn-small btn-outline" id="select-cancel" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div class="lightbox" id="unlock-modal" role="dialog" aria-modal="true" aria-labelledby="unlock-title">
+    <canvas id="unlock-confetti" aria-hidden="true"></canvas>
+    <div class="share-panel unlock-panel">
+      <p class="unlock-kicker">Party plan</p>
+      <h2 class="unlock-title" id="unlock-title">Unlocked!</h2>
+      <p class="unlock-copy">Unlimited photos for this album. The gallery stays up for a year. You can keep adding from any phone.</p>
+      <button class="btn" id="unlock-add" type="button">Add photos</button>
+      <button class="btn btn-outline" id="unlock-close" type="button">Nice</button>
     </div>
   </div>
 

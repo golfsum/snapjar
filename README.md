@@ -51,10 +51,12 @@ No payment code needed for launch:
 
 1. The Stripe Payment Link lives in `public/assets/config.js` (already set)
 2. Every upgrade link automatically appends the album code as `client_reference_id`, so each payment in your Stripe dashboard shows exactly which album bought it
-3. When a payment lands, open Firestore in the console, find `events/{that code}`, set `paid` to `true`. Takes ten seconds.
+3. Stripe webhook (`/api/stripe-webhook`) sets `paid` on the album as soon as Checkout completes. After payment, Stripe should redirect to `/api/stripe-success?session_id={CHECKOUT_SESSION_ID}` so the host lands back on the album with the unlocked celebration.
 4. Upgrade prompts appear in three places: the album-created success screen, the album header (hosts only), and the album-full notice.
 
-Manually flipping a flag feels scrappy because it is. It's also the correct amount of engineering for week one. Automate it with a Stripe webhook + Cloud Function once you're doing a few sales a day.
+Manually flipping a flag is the fallback if the webhook is down. The webhook is the real fulfillment path.
+
+Set these on the Vercel project: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `FIREBASE_SERVICE_ACCOUNT` (the service account JSON as one line). In Stripe, send `checkout.session.completed` to `https://getsnapjar.com/api/stripe-webhook`, and set both Payment Links' after-payment redirect to `https://getsnapjar.com/api/stripe-success?session_id={CHECKOUT_SESSION_ID}`.
 
 The rules file makes this safe: nobody can flip their own `paid` flag, only you can, from the console.
 
