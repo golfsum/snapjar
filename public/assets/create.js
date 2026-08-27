@@ -65,6 +65,7 @@ form.addEventListener("submit", async (e) => {
       name: eventName,
       hostName: hostName || null,
       hostUid: user.uid,
+      hostEmail: (!user.isAnonymous && user.email) ? user.email : null,
       paid: false,
       photoCount: 0,
       createdAt: serverTimestamp()

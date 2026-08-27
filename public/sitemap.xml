@@ -26,6 +26,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://getsnapjar.com/contact</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://getsnapjar.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

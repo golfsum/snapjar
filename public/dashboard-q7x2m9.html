@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snapjar HQ</title>
-  <meta name="robots" content="noindex">
+  <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,6 +35,7 @@
       <div class="hq-brand"><img class="logo-mark" src="/assets/logo.svg" alt=""><span class="logo-txt">snap<i>jar</i></span> <b>HQ</b></div>
       <button class="hq-nav active" data-view="overview" type="button"><span class="ico">&#9632;</span> Overview</button>
       <button class="hq-nav" data-view="albums" type="button"><span class="ico">&#9638;</span> Albums</button>
+      <button class="hq-nav" data-view="visitors" type="button"><span class="ico">&#9787;</span> Visitors</button>
       <button class="hq-nav" data-view="reports" type="button"><span class="ico">&#9873;</span> Reports <span class="nav-badge" id="reports-badge" hidden></span></button>
       <a class="hq-nav" href="https://analytics.google.com" target="_blank" rel="noopener"><span class="ico">&#8599;</span> Analytics</a>
       <a class="hq-nav" href="/" target="_blank" rel="noopener"><span class="ico">&#8599;</span> Live site</a>
@@ -83,6 +84,39 @@
         </div>
       </section>
 
+      <!-- visitors -->
+      <section class="hq-view" id="view-visitors" hidden>
+        <div class="stat-cards" id="visitor-stat-cards"></div>
+        <div class="panel">
+          <h2>Hosts</h2>
+          <p class="panel-sub">People who created albums. Guest names are not stored as accounts, so this is the user list.</p>
+          <div class="table-wrap">
+            <table class="hq-table">
+              <thead>
+                <tr>
+                  <th>Host</th><th>Email</th><th>Albums</th><th>Photos</th><th>Scans</th><th>Views</th><th>Last album</th>
+                </tr>
+              </thead>
+              <tbody id="host-rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Guest visits by album</h2>
+          <p class="panel-sub">QR scans and page views already stored on each album. Traffic sources stay in Google Analytics.</p>
+          <div class="table-wrap">
+            <table class="hq-table">
+              <thead>
+                <tr>
+                  <th>Album</th><th>Scans</th><th>Views</th><th>Downloads</th><th>Photos</th>
+                </tr>
+              </thead>
+              <tbody id="visit-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- reports -->
       <section class="hq-view" id="view-reports" hidden>
         <div class="panel">
@@ -101,7 +135,7 @@
             <table class="hq-table">
               <thead>
                 <tr>
-                  <th>Album</th><th>Code</th><th>Photos</th><th>Created</th><th>Status</th><th></th>
+                  <th>Album</th><th>Code</th><th>Photos</th><th>Views</th><th>Created</th><th>Status</th><th></th>
                 </tr>
               </thead>
               <tbody id="album-rows"></tbody>

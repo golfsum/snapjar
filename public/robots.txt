@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard-q7x2m9
+Disallow: /admin-q7x2m9
+Disallow: /event
+Disallow: /albums
+Disallow: /settings
+Disallow: /design
+Disallow: /tables
 
 Sitemap: https://getsnapjar.com/sitemap.xml

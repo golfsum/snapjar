@@ -9,6 +9,9 @@ export const PRO_PAYMENT_LINK = "https://buy.stripe.com/bJe3coeNc2ap7hreIr2sM02"
 export const PRO_PRICE = 29.99;
 export const PARTY_PRICE = 19.99;
 
+// Public contact and support. Keep this as the only address on the site.
+export const SUPPORT_EMAIL = "support@getsnapjar.com";
+
 // The only Google account the admin dashboard accepts. Must match the
 // email in firestore.rules or the dashboard queries get denied.
 export const ADMIN_EMAIL = "nd82soft@gmail.com";

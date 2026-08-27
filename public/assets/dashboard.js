@@ -67,7 +67,7 @@ for (const btn of document.querySelectorAll(".hq-nav[data-view]")) {
     const view = btn.dataset.view;
     for (const sec of document.querySelectorAll(".hq-view")) sec.hidden = sec.id !== `view-${view}`;
     document.getElementById("view-title").textContent =
-      { overview: "Overview", albums: "Albums", reports: "Reports" }[view] || "Overview";
+      { overview: "Overview", albums: "Albums", visitors: "Visitors", reports: "Reports" }[view] || "Overview";
   });
 }
 
@@ -107,6 +107,7 @@ function renderAll() {
   renderTop();
   renderRecent();
   renderTable();
+  renderVisitors();
   renderReports();
   const badge = document.getElementById("reports-badge");
   if (reports.length) { badge.hidden = false; badge.textContent = reports.length; }
@@ -128,7 +129,9 @@ function dayStart(ms) {
 function renderStats() {
   const totalPhotos = albums.reduce((s, a) => s + (a.photoCount || 0), 0);
   const totalScans = albums.reduce((s, a) => s + (a.scanCount || 0), 0);
+  const totalViews = albums.reduce((s, a) => s + (a.viewCount || 0), 0);
   const totalDownloads = albums.reduce((s, a) => s + (a.downloadCount || 0), 0);
+  const hosts = uniqueHosts(albums);
   const paid = albums.filter((a) => a.paid).length;
   const proCount = albums.filter((a) => a.pro).length;
   const revenue = albums.reduce((s, a) => s + albumRevenue(a), 0);
@@ -145,6 +148,11 @@ function renderStats() {
       sub: weekCount ? `<span class="delta">+${weekCount}</span> this week` : "No new albums this week"
     },
     {
+      label: "Hosts",
+      num: hosts.length,
+      sub: "People who created albums"
+    },
+    {
       label: "Photos collected",
       num: totalPhotos.toLocaleString(),
       sub: `across ${albums.length} album${albums.length === 1 ? "" : "s"}`
@@ -158,6 +166,11 @@ function renderStats() {
       label: "QR scans",
       num: totalScans.toLocaleString(),
       sub: "Guests who scanned a code"
+    },
+    {
+      label: "Album views",
+      num: totalViews.toLocaleString(),
+      sub: "Times albums were opened"
     },
     {
       label: "Downloads",
@@ -240,6 +253,38 @@ function renderChart() {
 }
 
 // ---------- lists ----------
+
+function uniqueHosts(list) {
+  const map = new Map();
+  for (const a of list) {
+    const key = a.hostUid || a.hostEmail || ("anon-" + a.code);
+    let h = map.get(key);
+    if (!h) {
+      h = {
+        key,
+        uid: a.hostUid || "",
+        name: a.hostName || "",
+        email: a.hostEmail || "",
+        albums: 0,
+        photos: 0,
+        scans: 0,
+        views: 0,
+        paid: 0,
+        lastAt: 0
+      };
+      map.set(key, h);
+    }
+    h.albums += 1;
+    h.photos += a.photoCount || 0;
+    h.scans += a.scanCount || 0;
+    h.views += a.viewCount || 0;
+    if (a.paid) h.paid += 1;
+    if (a.hostName && !h.name) h.name = a.hostName;
+    if (a.hostEmail && !h.email) h.email = a.hostEmail;
+    h.lastAt = Math.max(h.lastAt, toMillis(a.createdAt));
+  }
+  return [...map.values()].sort((a, b) => b.lastAt - a.lastAt);
+}
 
 function initials(name) {
   const s = (name || "").trim();
@@ -387,6 +432,94 @@ async function deleteReportedPhoto(report, btn) {
   }
 }
 
+// ---------- visitors ----------
+
+function renderVisitors() {
+  const hosts = uniqueHosts(albums);
+  const totalViews = albums.reduce((s, a) => s + (a.viewCount || 0), 0);
+  const totalScans = albums.reduce((s, a) => s + (a.scanCount || 0), 0);
+  const withEmail = hosts.filter((h) => h.email).length;
+
+  document.getElementById("visitor-stat-cards").innerHTML = [
+    { label: "Unique hosts", num: hosts.length, sub: withEmail ? `${withEmail} with an email on file` : "Emails appear after a host signs in" },
+    { label: "Guest scans", num: totalScans.toLocaleString(), sub: "QR code opens" },
+    { label: "Album views", num: totalViews.toLocaleString(), sub: "Including return visits" }
+  ].map((c) => `
+    <div class="scard">
+      <div class="label">${c.label}</div>
+      <div class="num">${c.num}</div>
+      <div class="sub">${c.sub}</div>
+    </div>`).join("");
+
+  const hostBody = document.getElementById("host-rows");
+  hostBody.textContent = "";
+  if (!hosts.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 7;
+    td.className = "rsub";
+    td.textContent = "No hosts yet.";
+    tr.appendChild(td);
+    hostBody.appendChild(tr);
+  } else {
+    for (const h of hosts) {
+      const tr = document.createElement("tr");
+      const name = document.createElement("td");
+      name.textContent = h.name || "(no name)";
+      const email = document.createElement("td");
+      if (h.email) {
+        const a = document.createElement("a");
+        a.href = "mailto:" + h.email;
+        a.textContent = h.email;
+        email.appendChild(a);
+      } else {
+        email.className = "rsub";
+        email.textContent = "—";
+      }
+      const alb = document.createElement("td");
+      alb.textContent = String(h.albums);
+      const photos = document.createElement("td");
+      photos.textContent = String(h.photos);
+      const scans = document.createElement("td");
+      scans.textContent = String(h.scans);
+      const views = document.createElement("td");
+      views.textContent = String(h.views);
+      const last = document.createElement("td");
+      last.textContent = h.lastAt
+        ? new Date(h.lastAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+        : "";
+      tr.append(name, email, alb, photos, scans, views, last);
+      hostBody.appendChild(tr);
+    }
+  }
+
+  const visitBody = document.getElementById("visit-rows");
+  visitBody.textContent = "";
+  const byVisits = [...albums].sort((a, b) =>
+    ((b.scanCount || 0) + (b.viewCount || 0)) - ((a.scanCount || 0) + (a.viewCount || 0))
+  );
+  for (const a of byVisits) {
+    const tr = document.createElement("tr");
+    const name = document.createElement("td");
+    const link = document.createElement("a");
+    link.href = `/event?c=${a.code}`;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = a.name || "(unnamed)";
+    name.appendChild(link);
+    const scans = document.createElement("td");
+    scans.textContent = String(a.scanCount || 0);
+    const views = document.createElement("td");
+    views.textContent = String(a.viewCount || 0);
+    const dls = document.createElement("td");
+    dls.textContent = String(a.downloadCount || 0);
+    const photos = document.createElement("td");
+    photos.textContent = String(a.photoCount || 0);
+    tr.append(name, scans, views, dls, photos);
+    visitBody.appendChild(tr);
+  }
+}
+
 // ---------- album table ----------
 
 function renderTable() {
@@ -403,11 +536,11 @@ function renderTable() {
     link.rel = "noopener";
     link.textContent = a.name || "(unnamed)";
     name.appendChild(link);
-    if (a.hostName) {
+    if (a.hostName || a.hostEmail) {
       const sub = document.createElement("div");
       sub.className = "rsub";
       sub.style.color = "var(--faint)";
-      sub.textContent = "host: " + a.hostName;
+      sub.textContent = [a.hostName && ("host: " + a.hostName), a.hostEmail].filter(Boolean).join(" · ");
       name.appendChild(sub);
     }
 
@@ -417,6 +550,9 @@ function renderTable() {
 
     const photos = document.createElement("td");
     photos.textContent = a.photoCount || 0;
+
+    const views = document.createElement("td");
+    views.textContent = a.viewCount || 0;
 
     const created = document.createElement("td");
     created.textContent = toMillis(a.createdAt)
@@ -448,7 +584,7 @@ function renderTable() {
     delBtn.addEventListener("click", () => removeAlbum(a, delBtn));
 
     actions.append(payBtn, proBtn, delBtn);
-    tr.append(name, codeCell, photos, created, status, actions);
+    tr.append(name, codeCell, photos, views, created, status, actions);
     tbody.appendChild(tr);
   }
 }
@@ -502,13 +638,13 @@ async function removeAlbum(album, btn) {
 if (location.hash === "#preview") {
   const mkTs = (daysAgo) => ({ toMillis: () => Date.now() - daysAgo * 86400000 });
   albums = [
-    { code: "AAA111", name: "Emily & Jake's Wedding", photoCount: 427, paid: true, createdAt: mkTs(1), hostName: "Emily", scanCount: 512, downloadCount: 208 },
-    { code: "BBB222", name: "Sarah's 30th", photoCount: 188, paid: true, createdAt: mkTs(2), hostName: "Sarah", scanCount: 240, downloadCount: 74 },
-    { code: "CCC333", name: "Baby Ruiz Shower", photoCount: 96, paid: false, createdAt: mkTs(3), scanCount: 88, downloadCount: 18 },
-    { code: "DDD444", name: "Office Summer Party", photoCount: 61, paid: false, createdAt: mkTs(5), scanCount: 143, downloadCount: 9 },
-    { code: "EEE555", name: "Graduation 2026", photoCount: 44, paid: true, createdAt: mkTs(6), scanCount: 61, downloadCount: 31 },
-    { code: "FFF666", name: "Mike & Dana", photoCount: 22, paid: false, createdAt: mkTs(9), scanCount: 40, downloadCount: 4 },
-    { code: "GGG777", name: "Reunion", photoCount: 12, paid: false, createdAt: mkTs(12), scanCount: 19, downloadCount: 0 }
+    { code: "AAA111", name: "Emily & Jake's Wedding", photoCount: 427, paid: true, createdAt: mkTs(1), hostName: "Emily", hostUid: "u1", hostEmail: "emily@example.com", scanCount: 512, viewCount: 890, downloadCount: 208 },
+    { code: "BBB222", name: "Sarah's 30th", photoCount: 188, paid: true, createdAt: mkTs(2), hostName: "Sarah", hostUid: "u2", hostEmail: "sarah@example.com", scanCount: 240, viewCount: 310, downloadCount: 74 },
+    { code: "CCC333", name: "Baby Ruiz Shower", photoCount: 96, paid: false, createdAt: mkTs(3), hostName: "Maya Ruiz", hostUid: "u3", scanCount: 88, viewCount: 120, downloadCount: 18 },
+    { code: "DDD444", name: "Office Summer Party", photoCount: 61, paid: false, createdAt: mkTs(5), hostName: "Sarah", hostUid: "u2", hostEmail: "sarah@example.com", scanCount: 143, viewCount: 201, downloadCount: 9 },
+    { code: "EEE555", name: "Graduation 2026", photoCount: 44, paid: true, createdAt: mkTs(6), hostName: "Emily", hostUid: "u1", hostEmail: "emily@example.com", scanCount: 61, viewCount: 80, downloadCount: 31 },
+    { code: "FFF666", name: "Mike & Dana", photoCount: 22, paid: false, createdAt: mkTs(9), scanCount: 40, viewCount: 55, downloadCount: 4 },
+    { code: "GGG777", name: "Reunion", photoCount: 12, paid: false, createdAt: mkTs(12), scanCount: 19, viewCount: 22, downloadCount: 0 }
   ];
   reports = [
     { id: "r1", albumCode: "AAA111", albumName: "Emily & Jake's Wedding", reason: "Inappropriate content", photoId: "p1", photoUrl: "", createdAt: mkTs(0) },

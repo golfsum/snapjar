@@ -87,7 +87,8 @@ The web app is the funnel, the iOS app is the moat:
 ## Notes for future you
 
 - Free limit (25 photos) is enforced in the Firestore rules themselves, not just the browser. Parallel uploads racing the counter can slightly overshoot 25, which is fine; the point is that devtools can't get unlimited for free.
-- Admin access requires a signed-in Google account with the exact admin email, verified. Keep 2FA on that Google account; it is the master key.
+- Admin HQ is at `/dashboard-q7x2m9`. It is not linked from the public site. Access requires a signed-in Google account with the exact admin email, verified. Keep 2FA on that Google account; it is the master key. Firestore rules are the real lock.
+- Public contact and support is `support@getsnapjar.com`. Forward that mailbox to your real inbox (Cloudflare Email Routing works if the domain is on Cloudflare).
 - QR codes come from api.qrserver.com (free, no key). If you ever want zero third-party calls, swap in a local QR library.
 - Photos compress client-side to max 1920px JPEG at 85 quality, roughly 250 to 400 KB each. Firestore and Storage free allowances go a long way at that size.
 - "Download everything in one click" on the pricing page is a promised Party feature. Ship it as a simple JSZip page when the first paying customer asks.
