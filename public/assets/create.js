@@ -1,6 +1,6 @@
 // Album creation flow.
 
-import { db, ensureSignedIn, track } from "./firebase-init.js";
+import { db, ensureSignedIn, track, getFirstTouchAttribution } from "./firebase-init.js";
 import { upgradeUrlFor } from "./config.js";
 import {
   doc, getDoc, setDoc, serverTimestamp
@@ -61,6 +61,8 @@ form.addEventListener("submit", async (e) => {
       code = randomCode();
     }
 
+    const attribution = getFirstTouchAttribution();
+
     await setDoc(doc(db, "events", code), {
       name: eventName,
       hostName: hostName || null,
@@ -68,11 +70,16 @@ form.addEventListener("submit", async (e) => {
       hostEmail: (!user.isAnonymous && user.email) ? user.email : null,
       paid: false,
       photoCount: 0,
+      attribution,
       createdAt: serverTimestamp()
     });
 
     rememberAlbum(code, eventName);
-    track("album_created", { album: code });
+    track("album_created", {
+      album: code,
+      source: attribution.source || "unknown",
+      campaign: attribution.utmCampaign || ""
+    });
     showSuccess(code, eventName);
   } catch (err) {
     console.error(err);
