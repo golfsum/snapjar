@@ -3,9 +3,9 @@ const { fulfillCheckout } = require("./_lib/unlock-album");
 
 function rawBody(req) {
   return new Promise((resolve, reject) => {
-    if (Buffer.isBuffer(req.body)) return resolve(req.body);
-    if (typeof req.body === "string") return resolve(Buffer.from(req.body));
-    if (req.body != null) return reject(new Error("Raw request body required"));
+    // Vercel preserves the raw stream but exposes parsed JSON through a lazy
+    // req.body getter. Never read that getter for signature verification.
+    if (typeof req.on !== "function") return reject(new Error("Raw request stream required"));
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
     req.on("end", () => resolve(Buffer.concat(chunks)));
@@ -69,6 +69,3 @@ module.exports = async (req, res) => {
   }
 };
 
-module.exports.config = {
-  api: { bodyParser: false }
-};

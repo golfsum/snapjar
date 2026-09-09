@@ -90,14 +90,15 @@ function response() {
     redirect(code, location) { this.statusCode = code; this.headers.Location = location; return this; }
   };
 }
-async function delivery(s, { type = "checkout.session.completed", corrupt = false, parsed = false, eventMode = false } = {}) {
+async function delivery(s, { type = "checkout.session.completed", corrupt = false, parsed = false, lazyBody = false, eventMode = false } = {}) {
   sessions.set(s.id, s);
   const payload = JSON.stringify({ id: "evt_fixture", type, livemode: eventMode, data: { object: { id: s.id } } });
   const header = signatureClient.webhooks.generateTestHeaderString({ payload, secret: signingSecret });
-  const req = Readable.from([Buffer.from(payload + (corrupt ? " " : ""))]);
+  const req = Readable.from([Buffer.from(parsed ? "" : payload + (corrupt ? " " : ""))]);
   req.method = "POST";
   req.headers = { "stripe-signature": header };
   if (parsed) req.body = JSON.parse(payload);
+  if (lazyBody) Object.defineProperty(req, "body", { get() { throw new Error("Must not access Vercel's parsed body getter"); } });
   const res = response();
   await webhook(req, res);
   return res;
@@ -181,6 +182,12 @@ test("a modified body or parsed JSON is rejected before fulfillment", async () =
   assert.equal((await delivery(session(), { corrupt: true })).statusCode, 400);
   assert.equal((await delivery(session(), { parsed: true })).statusCode, 400);
   assert.equal(updates, 0);
+});
+
+test("Vercel's lazy parsed body does not replace the signed raw request stream", async () => {
+  const res = await delivery(session(), { lazyBody: true });
+  assert.equal(res.statusCode, 200);
+  assert.equal(albums.get("events/ABC234").paid, true);
 });
 test("unknown products, subscriptions, and wrong-mode sessions cannot grant access", async () => {
   for (const change of [{ payment_link: "plink_other" }, { mode: "subscription" }, { livemode: true }]) {
