@@ -276,7 +276,7 @@ function maybeCelebrateFromUrl() {
   params.delete("unlocked");
   const qs = params.toString();
   history.replaceState(null, "", `${location.pathname}${qs ? "?" + qs : ""}${location.hash}`);
-  celebrateUnlock();
+  if (eventData?.paid) celebrateUnlock();
 }
 
 function watchEvent() {

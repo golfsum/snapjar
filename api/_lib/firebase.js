@@ -1,29 +1,46 @@
-const admin = require("firebase-admin");
+const { Firestore, FieldValue } = require("@google-cloud/firestore");
+const { ExternalAccountClient } = require("google-auth-library");
+const { getVercelOidcToken } = require("@vercel/oidc");
 
-function initAdmin() {
-  if (admin.apps.length) return admin;
+let database;
 
-  const json = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (json) {
-    const cred = JSON.parse(json);
-    if (typeof cred.private_key === "string") {
-      cred.private_key = cred.private_key.replace(/\\n/g, "\n");
+function databaseSettings(env = process.env) {
+  const projectId = env.FIREBASE_PROJECT_ID || "snapjar-d8489";
+  const provider = env.GOOGLE_WORKLOAD_IDENTITY_PROVIDER;
+  if (provider) {
+    if (!/^projects\/\d+\/locations\/global\/workloadIdentityPools\/[\w-]+\/providers\/[\w-]+$/.test(provider)) {
+      throw new Error("Invalid Google identity provider.");
     }
-    admin.initializeApp({ credential: admin.credential.cert(cred) });
-    return admin;
-  }
-
-  const projectId = process.env.FIREBASE_PROJECT_ID || "snapjar-d8489";
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
-  if (clientEmail && privateKey) {
-    admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey })
+    const email = env.FIREBASE_CLIENT_EMAIL;
+    if (!email || !email.endsWith(`@${projectId}.iam.gserviceaccount.com`)) {
+      throw new Error("Firebase service account belongs to a different project.");
+    }
+    const authClient = ExternalAccountClient.fromJSON({
+      type: "external_account",
+      audience: `//iam.googleapis.com/${provider}`,
+      subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+      token_url: "https://sts.googleapis.com/v1/token",
+      service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${email}:generateAccessToken`,
+      subject_token_supplier: { getSubjectToken: () => getVercelOidcToken() },
+      scopes: ["https://www.googleapis.com/auth/datastore"]
     });
-    return admin;
+    return { projectId, authClient };
   }
 
-  throw new Error("Firebase admin credentials are missing.");
+  // Preserve existing non-Vercel/test installations with explicit credentials.
+  const credentials = env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(env.FIREBASE_SERVICE_ACCOUNT)
+    : { project_id: projectId, client_email: env.FIREBASE_CLIENT_EMAIL, private_key: env.FIREBASE_PRIVATE_KEY };
+  if (credentials.project_id !== projectId) throw new Error("Firebase service account belongs to a different project.");
+  if (!credentials.client_email || !credentials.private_key) throw new Error("Firebase credentials are missing.");
+  credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+  require("node:crypto").createPrivateKey(credentials.private_key);
+  return { projectId, credentials };
 }
 
-module.exports = { initAdmin };
+function getDatabase() {
+  if (!database) database = new Firestore(databaseSettings());
+  return database;
+}
+
+module.exports = { getDatabase, databaseSettings, FieldValue };

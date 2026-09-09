@@ -47,16 +47,16 @@ No build step. No npm install. It's static files plus Firebase, which means noth
 
 ## How the money works this week
 
-No payment code needed for launch:
+Automatic fulfillment:
 
 1. The Stripe Payment Link lives in `public/assets/config.js` (already set)
-2. Every upgrade link automatically appends the album code as `client_reference_id`, so each payment in your Stripe dashboard shows exactly which album bought it
+2. Every upgrade button goes through `/api/checkout`, which checks the payment configuration and album before sending the album code to Stripe as `client_reference_id`.
 3. Stripe webhook (`/api/stripe-webhook`) sets `paid` on the album as soon as Checkout completes. After payment, Stripe should redirect to `/api/stripe-success?session_id={CHECKOUT_SESSION_ID}` so the host lands back on the album with the unlocked celebration.
 4. Upgrade prompts appear in three places: the album-created success screen, the album header (hosts only), and the album-full notice.
 
 Manually flipping a flag is the fallback if the webhook is down. The webhook is the real fulfillment path.
 
-Set these on the Vercel project: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `FIREBASE_SERVICE_ACCOUNT` (the service account JSON as one line). In Stripe, send `checkout.session.completed` to `https://getsnapjar.com/api/stripe-webhook`, and set both Payment Links' after-payment redirect to `https://getsnapjar.com/api/stripe-success?session_id={CHECKOUT_SESSION_ID}`.
+Follow [the payment setup and verification guide](docs/payments.md) to configure the live Stripe key, webhook secret, Party/Pro Payment Link IDs, and Firebase Admin credentials on Vercel. Both immediate and delayed payment success events must reach the webhook. Production builds fail when these required settings are missing.
 
 The rules file makes this safe: nobody can flip their own `paid` flag, only you can, from the console.
 
