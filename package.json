@@ -2,10 +2,13 @@
   "name": "snapjar",
   "private": true,
   "scripts": {
-    "vercel-build": "node -e \"process.exit(0)\""
+    "vercel-build": "node scripts/check-payment-config.js",
+    "test": "node --test scripts/payments.test.js"
   },
   "dependencies": {
-    "firebase-admin": "^12.7.0",
-    "stripe": "^17.7.0"
+    "@google-cloud/firestore": "^9.1.0",
+    "@vercel/oidc": "^3.8.6",
+    "google-auth-library": "^11.0.2",
+    "stripe": "^22.6.1"
   }
 }

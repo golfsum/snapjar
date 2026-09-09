@@ -17,11 +17,9 @@ export const SUPPORT_EMAIL = "support@getsnapjar.com";
 export const ADMIN_EMAIL = "nd82soft@gmail.com";
 
 export function upgradeUrlFor(code) {
-  if (!STRIPE_PAYMENT_LINK) return "/#pricing";
-  return `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(code)}`;
+  return `/api/checkout?c=${encodeURIComponent(code)}&plan=party`;
 }
 
 export function proUpgradeUrlFor(code) {
-  if (!PRO_PAYMENT_LINK) return "/#pricing";
-  return `${PRO_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(code)}`;
+  return `/api/checkout?c=${encodeURIComponent(code)}&plan=pro`;
 }
