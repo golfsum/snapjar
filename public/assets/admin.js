@@ -70,6 +70,14 @@ async function loadDashboard() {
   }
 }
 
+function sourceLabel(a) {
+  const attr = a.attribution || {};
+  const source = attr.source || "unknown";
+  const medium = attr.utmMedium ? ` / ${attr.utmMedium}` : "";
+  const campaign = attr.utmCampaign ? ` · ${attr.utmCampaign}` : "";
+  return `${source}${medium}${campaign}`;
+}
+
 function render() {
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -104,6 +112,10 @@ function render() {
       host.textContent = "host: " + a.hostName;
       name.appendChild(host);
     }
+    const source = document.createElement("div");
+    source.className = "cell-sub";
+    source.textContent = "source: " + sourceLabel(a);
+    name.appendChild(source);
 
     const code = document.createElement("td");
     code.className = "cell-mono";
