@@ -12,6 +12,7 @@ function paymentPage(res, { status, title, message, retryUrl, albumCode }) {
   res.status(status).send(`<!doctype html><html lang="en"><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex"><title>${escapeHtml(title)} · Snapjar</title>
+    <script src="/assets/analytics.js" defer></script>
     <style>body{margin:0;background:#fafaf7;color:#243b32;font:17px/1.6 system-ui,sans-serif}main{max-width:520px;margin:12vh auto;padding:32px}h1{font-size:30px;line-height:1.2}a{color:#176347}nav{display:flex;gap:24px;flex-wrap:wrap;margin:28px 0}.brand{font-weight:700;font-size:24px}</style>
     </head><body><main><a class="brand" href="/">Snapjar</a>
     <h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p>

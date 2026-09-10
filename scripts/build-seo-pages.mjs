@@ -195,6 +195,7 @@ ${JSON.stringify(pageLd, null, 2)}
 ${JSON.stringify(breadcrumbLd, null, 2)}
   </script>
   ${faqLd(faq, url)}
+  <script src="/assets/analytics.js" defer></script>
 </head>
 <body>
   <nav class="nav">

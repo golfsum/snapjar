@@ -7,7 +7,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { getAnalytics, logEvent, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCozt3hTO1he8N1CeC01_ciRQGWbSxG9SM",
@@ -16,7 +15,7 @@ const firebaseConfig = {
   storageBucket: "snapjar-d8489.firebasestorage.app",
   messagingSenderId: "797013092915",
   appId: "1:797013092915:web:0118a4c75f3c2bcaea9146",
-  measurementId: "G-WSPXVLKVL9"
+  measurementId: "G-V22WH9DVT5"
 };
  
 const app = initializeApp(firebaseConfig);
@@ -86,14 +85,10 @@ export function getFirstTouchAttribution() {
   return { ...firstTouchAttribution };
 }
 
-// Page views and traffic sources show up in Firebase Analytics / GA4.
-// Guarded so it never breaks browsers that block analytics.
-let analytics = null;
-isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); }).catch(() => {});
-
-// Fire-and-forget event logging. Never throws, never blocks the UI.
+// Sitewide analytics is loaded by /assets/analytics.js, including SEO pages.
+// This wrapper keeps product modules decoupled from the analytics provider.
 export function track(name, params) {
-  try { if (analytics) logEvent(analytics, name, params || {}); } catch { /* ignore */ }
+  try { window.snapjarTrack?.(name, params || {}); } catch { /* ignore */ }
 }
 
 // Everyone signs in anonymously behind the scenes. Guests never see a login.
