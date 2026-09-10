@@ -85,7 +85,7 @@ export function getFirstTouchAttribution() {
   return { ...firstTouchAttribution };
 }
 
-// Sitewide analytics is loaded by /assets/analytics.js, including SEO pages.
+// Sitewide analytics is loaded by /assets/site-metrics.js, including SEO pages.
 // This wrapper keeps product modules decoupled from the analytics provider.
 export function track(name, params) {
   try { window.snapjarTrack?.(name, params || {}); } catch { /* ignore */ }
