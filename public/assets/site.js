@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   "use strict";
 
   const MEASUREMENT_ID = "G-V22WH9DVT5";
@@ -6,6 +6,18 @@
 
   // Keep owner-only dashboard activity out of acquisition and conversion data.
   if (path === "/dashboard-q7x2m9" || path === "/admin-q7x2m9") return;
+
+  // Album pages must resolve the persisted account before analytics starts.
+  // Do not create an anonymous account just to decide whether to track.
+  if (path === "/event") {
+    try {
+      const [{ auth }, { isAdminUser }] = await Promise.all([
+        import("./firebase-init.js"), import("./config.js")
+      ]);
+      await auth.authStateReady();
+      if (isAdminUser(auth.currentUser)) return;
+    } catch { return; }
+  }
 
   function cleanUrl(value) {
     try {

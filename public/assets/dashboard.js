@@ -3,7 +3,7 @@
 // The Google email gate here is cosmetic; firestore.rules is the real lock.
 
 import { auth, db } from "./firebase-init.js";
-import { ADMIN_EMAIL } from "./config.js";
+import { isAdminUser } from "./config.js";
 import {
   GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -11,7 +11,11 @@ import {
   collection, query, orderBy, limit, getDocs, doc, updateDoc, deleteDoc, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import { openInspector, closeInspector } from "./admin-inspector.js";
+
 let reports = [];
+let reportsAvailable = true;
+let editsEnabled = false;
 
 const PARTY_PRICE = 19.99;
 const PRO_PRICE = 29.99;
@@ -31,11 +35,17 @@ let albums = [];
 
 onAuthStateChanged(auth, (user) => {
   if (location.hash === "#preview") return; // layout preview, ignore real auth
-  if (user && user.email === ADMIN_EMAIL) {
+  if (isAdminUser(user)) {
     gateView.style.display = "none";
     document.getElementById("who").textContent = user.email;
     loadDashboard();
   } else {
+    editsEnabled = false;
+    document.getElementById("enable-edits").checked = false;
+    closeInspector();
+    albums = [];
+    reports = [];
+    loadingView.style.display = "none";
     gateView.style.display = "grid";
     hqView.style.display = "none";
   }
@@ -45,7 +55,7 @@ document.getElementById("signin-btn").addEventListener("click", async () => {
   gateError.classList.remove("show");
   try {
     const result = await signInWithPopup(auth, new GoogleAuthProvider());
-    if (result.user.email !== ADMIN_EMAIL) {
+    if (!isAdminUser(result.user)) {
       await signOut(auth);
       gateError.textContent = "That Google account isn't the owner.";
       gateError.classList.add("show");
@@ -71,27 +81,48 @@ for (const btn of document.querySelectorAll(".hq-nav[data-view]")) {
   });
 }
 
+document.getElementById("refresh-btn").addEventListener("click", () => {
+  if (location.hash === "#preview") return renderAll();
+  if (isAdminUser(auth.currentUser)) loadDashboard();
+});
+document.getElementById("enable-edits").addEventListener("change", (event) => {
+  editsEnabled = event.target.checked && location.hash !== "#preview";
+  renderAll();
+});
+for (const id of ["album-search", "album-filter"]) {
+  document.getElementById(id).addEventListener("input", renderTable);
+}
+
 async function loadDashboard() {
   loadingView.style.display = "grid";
   try {
     const snap = await getDocs(
       query(collection(db, "events"), orderBy("createdAt", "desc"), limit(1000))
     );
-    albums = snap.docs.map((d) => ({ code: d.id, ...d.data() }));
+    albums = snap.docs.map((d) => ({ ...d.data(), code: d.id }));
 
+    reportsAvailable = true;
     try {
       const rSnap = await getDocs(
         query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(200))
       );
-      reports = rSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      reports = rSnap.docs.map((d) => ({ ...d.data(), id: d.id }));
     } catch (err) {
       console.error("reports load failed (deploy the reports rule?)", err);
       reports = [];
+      reportsAvailable = false;
     }
 
+    if (!isAdminUser(auth.currentUser)) return;
     renderAll();
     loadingView.style.display = "none";
     hqView.style.display = "grid";
+    const albumCode = new URLSearchParams(location.search).get("album");
+    if (albumCode) {
+      const album = albums.find(a => a.code === albumCode);
+      openInspector(album || { code: albumCode });
+      history.replaceState(null, "", location.pathname);
+    }
   } catch (err) {
     console.error(err);
     loadingView.style.display = "none";
@@ -112,7 +143,7 @@ function renderAll() {
   const badge = document.getElementById("reports-badge");
   if (reports.length) { badge.hidden = false; badge.textContent = reports.length; }
   else badge.hidden = true;
-  document.getElementById("updated").textContent = "Updated " + new Date().toLocaleString();
+  document.getElementById("updated").textContent = `${albums.length} albums loaded (newest 1,000 maximum). Updated ${new Date().toLocaleString()}`;
 }
 
 function toMillis(ts) {
@@ -141,7 +172,11 @@ function renderStats() {
   const storageGb = (totalPhotos * AVG_MB) / 1024;
   const conv = albums.length ? Math.round((paid / albums.length) * 100) : 0;
 
+  const active = albums.filter(a => (a.photoCount || 0) > 0).length;
+  const nearLimit = albums.filter(a => !a.paid && !a.pro && (a.photoCount || 0) >= 20).length;
   const cards = [
+    { label: "Albums with uploads", num: active, sub: `${albums.length ? Math.round(active / albums.length * 100) : 0}% activation in loaded albums` },
+    { label: "Free albums near limit", num: nearLimit, sub: "20+ photos, approaching the 25-photo limit" },
     {
       label: "Albums",
       num: albums.length,
@@ -158,14 +193,14 @@ function renderStats() {
       sub: `across ${albums.length} album${albums.length === 1 ? "" : "s"}`
     },
     {
-      label: "Revenue",
+      label: "Estimated plan value",
       num: "$" + revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      sub: `${paid} paid${proCount ? ` &middot; ${proCount} Pro` : ""} &middot; ${conv}% of albums`
+      sub: `${paid} paid &middot; ${proCount} Pro &middot; ${conv}% upgraded. Not Stripe receipts.`
     },
     {
       label: "QR scans",
       num: totalScans.toLocaleString(),
-      sub: "Guests who scanned a code"
+      sub: "Scan events, not unique people"
     },
     {
       label: "Album views",
@@ -184,8 +219,8 @@ function renderStats() {
     },
     {
       label: "Pending reports",
-      num: reports.length,
-      sub: reports.length ? "Needs your review" : "All clear"
+      num: reportsAvailable ? reports.length : "Unavailable",
+      sub: !reportsAvailable ? "Refresh to retry" : reports.length ? "Needs your review (up to 200 loaded)" : "No reports in loaded results"
     }
   ];
 
@@ -307,7 +342,7 @@ function renderTop() {
     const n = a.photoCount || 0;
     const name = a.name || "(unnamed)";
     return `<div class="rowitem">
-      <div class="avatar">${initials(name)}</div>
+      <div class="avatar">${escapeHtml(initials(name))}</div>
       <div class="rmain">
         <div class="rname">${escapeHtml(name)}</div>
         <div class="minibar"><i style="width:${Math.round((n / max) * 100)}%"></i></div>
@@ -333,7 +368,7 @@ function renderRecent() {
       : "";
     const tag = a.paid ? `<span class="tag tag-paid">Paid</span>` : `<span class="tag tag-free">Free</span>`;
     return `<div class="rowitem">
-      <div class="avatar">${initials(name)}</div>
+      <div class="avatar">${escapeHtml(initials(name))}</div>
       <div class="rmain">
         <div class="rname">${escapeHtml(name)}</div>
         <div class="rsub">${when} &middot; ${a.photoCount || 0} photos</div>
@@ -354,6 +389,7 @@ function renderReports() {
   const el = document.getElementById("report-rows");
   el.textContent = "";
 
+  if (!reportsAvailable) { el.textContent = "Reports could not be loaded. Refresh to retry."; return; }
   if (!reports.length) {
     el.innerHTML = `<div class="empty-line">No reports. Nothing to review.</div>`;
     return;
@@ -393,6 +429,7 @@ function renderReports() {
     dismiss.textContent = "Dismiss";
     dismiss.addEventListener("click", () => dismissReport(r, dismiss));
 
+    del.disabled = dismiss.disabled = !editsEnabled;
     actions.append(del, dismiss);
     row.append(thumb, main, actions);
     el.appendChild(row);
@@ -400,6 +437,7 @@ function renderReports() {
 }
 
 async function dismissReport(report, btn) {
+  if (!editsEnabled || !isAdminUser(auth.currentUser) || location.hash === "#preview") return;
   btn.disabled = true;
   try {
     await deleteDoc(doc(db, "reports", report.id));
@@ -413,6 +451,7 @@ async function dismissReport(report, btn) {
 }
 
 async function deleteReportedPhoto(report, btn) {
+  if (!editsEnabled || !isAdminUser(auth.currentUser) || location.hash === "#preview") return;
   if (!confirm("Delete this photo from its album and clear the report?")) return;
   btn.disabled = true;
   try {
@@ -502,7 +541,8 @@ function renderVisitors() {
     const tr = document.createElement("tr");
     const name = document.createElement("td");
     const link = document.createElement("a");
-    link.href = `/event?c=${a.code}`;
+    link.href = `/dashboard-q7x2m9?album=${encodeURIComponent(a.code)}`;
+    link.addEventListener("click", event => { event.preventDefault(); openInspector(a); });
     link.target = "_blank";
     link.rel = "noopener";
     link.textContent = a.name || "(unnamed)";
@@ -526,12 +566,20 @@ function renderTable() {
   const tbody = document.getElementById("album-rows");
   tbody.textContent = "";
 
-  for (const a of albums) {
+  const search = document.getElementById("album-search").value.trim().toLowerCase();
+  const filter = document.getElementById("album-filter").value;
+  const filtered = albums.filter(a => {
+    const matches = [a.name, a.code, a.hostName, a.hostEmail].some(v => String(v || "").toLowerCase().includes(search));
+    return matches && (filter === "all" || (filter === "pro" && a.pro) || (filter === "paid" && a.paid) || (filter === "free" && !a.paid && !a.pro) || (filter === "empty" && !a.photoCount));
+  });
+  document.getElementById("album-results").textContent = `${filtered.length} of ${albums.length} loaded albums`;
+  for (const a of filtered) {
     const tr = document.createElement("tr");
 
     const name = document.createElement("td");
     const link = document.createElement("a");
-    link.href = `/event?c=${a.code}`;
+    link.href = `/dashboard-q7x2m9?album=${encodeURIComponent(a.code)}`;
+    link.addEventListener("click", event => { event.preventDefault(); openInspector(a); });
     link.target = "_blank";
     link.rel = "noopener";
     link.textContent = a.name || "(unnamed)";
@@ -562,7 +610,7 @@ function renderTable() {
     const status = document.createElement("td");
     const badge = document.createElement("span");
     badge.className = a.paid ? "tag tag-paid" : "tag tag-free";
-    badge.textContent = a.paid ? "Paid" : "Free";
+    badge.textContent = a.pro ? "Pro" : a.paid ? "Party" : "Free";
     status.appendChild(badge);
 
     const actions = document.createElement("td");
@@ -583,6 +631,7 @@ function renderTable() {
     delBtn.textContent = "Delete";
     delBtn.addEventListener("click", () => removeAlbum(a, delBtn));
 
+    payBtn.disabled = proBtn.disabled = delBtn.disabled = !editsEnabled;
     actions.append(payBtn, proBtn, delBtn);
     tr.append(name, codeCell, photos, views, created, status, actions);
     tbody.appendChild(tr);
@@ -590,6 +639,8 @@ function renderTable() {
 }
 
 async function setPaid(album, paid, btn) {
+  if (!editsEnabled || !isAdminUser(auth.currentUser) || location.hash === "#preview") return;
+  if (!confirm(`Change ${album.name} to ${paid ? "paid" : "free"}? This changes customer access.`)) return;
   btn.disabled = true;
   try {
     await updateDoc(doc(db, "events", album.code), { paid });
@@ -604,6 +655,8 @@ async function setPaid(album, paid, btn) {
 
 // Pro ($29.99) includes Party benefits, so granting Pro also marks the album paid.
 async function setPro(album, pro, btn) {
+  if (!editsEnabled || !isAdminUser(auth.currentUser) || location.hash === "#preview") return;
+  if (!confirm(`Change Pro access for ${album.name}? This changes customer access.`)) return;
   btn.disabled = true;
   try {
     const patch = pro ? { pro: true, paid: true } : { pro: false };
@@ -619,6 +672,7 @@ async function setPro(album, pro, btn) {
 }
 
 async function removeAlbum(album, btn) {
+  if (!editsEnabled || !isAdminUser(auth.currentUser) || location.hash === "#preview") return;
   if (!confirm(`Delete "${album.name}" (${album.code})? Guests lose access immediately.`)) return;
   btn.disabled = true;
   try {

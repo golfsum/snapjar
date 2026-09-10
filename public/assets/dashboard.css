@@ -403,3 +403,20 @@ table.hq-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   .hq-side-spacer, .hq-side-foot { display: none; }
   .hq-cols { grid-template-columns: 1fr; }
 }
+
+/* Safe administration and album inspection. */
+.edit-toggle { display: block; margin-top: 12px; }
+.album-tools { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin: 20px 0; }
+.album-tools label { display: grid; gap: 6px; font-size: 13px; }
+.album-tools input, .album-tools select { padding: 10px; border: 1px solid #ccd3df; border-radius: 8px; font: inherit; max-width: 100%; }
+.tbtn:disabled { opacity: .4; cursor: not-allowed; }
+#album-inspector { width: min(960px, 94vw); max-height: 90vh; box-sizing: border-box; overflow: auto; border: 1px solid #dce0e8; border-radius: 18px; padding: 24px; color: #202632; background: #fff; }
+#album-inspector::backdrop { background: #14203699; }
+.inspector-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.inspector-head h2 { overflow-wrap: anywhere; }
+.inspector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.inspector-grid figure { margin: 0; }
+.inspector-grid img, .inspector-grid video { width: 100%; height: 190px; object-fit: contain; background: #f0f2f5; border-radius: 10px; }
+.inspector-grid figcaption { padding: 8px 0; font-size: 13px; }
+#inspector-content p { overflow-wrap: anywhere; }
+#inspector-content blockquote { margin: 12px 0; padding: 12px; border-left: 3px solid #b9a8eb; background: #f7f6fb; }

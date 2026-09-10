@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "vercel-build": "node scripts/check-payment-config.js",
-    "test": "node --test scripts/payments.test.js"
+    "test": "node --test scripts/*.test.js"
   },
   "dependencies": {
     "@google-cloud/firestore": "^9.1.0",

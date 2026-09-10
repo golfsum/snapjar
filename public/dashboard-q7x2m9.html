@@ -53,8 +53,13 @@
       <div class="hq-head">
         <h1 id="view-title">Overview</h1>
         <span class="hq-updated" id="updated"></span>
+        <button class="tbtn" id="refresh-btn" type="button">Refresh</button>
       </div>
 
+      <div class="note-card">
+        <strong>Read-only browsing.</strong> Album inspection does not add views, scans, downloads, messages, or notifications.
+        <label class="edit-toggle"><input id="enable-edits" type="checkbox"> Enable customer data changes for this session</label>
+      </div>
       <!-- overview -->
       <section class="hq-view" id="view-overview">
         <div class="stat-cards" id="stat-cards"></div>
@@ -134,7 +139,12 @@
       <section class="hq-view" id="view-albums" hidden>
         <div class="panel">
           <h2>All albums</h2>
-          <p class="panel-sub">Mark an album paid after its Stripe payment lands. The payment's reference is the album code.</p>
+          <div class="album-tools">
+            <label>Search <input id="album-search" type="search" placeholder="Album, code, host or email"></label>
+            <label>Filter <select id="album-filter"><option value="all">All albums</option><option value="free">Free</option><option value="paid">Paid (including Pro)</option><option value="pro">Pro</option><option value="empty">No uploads</option></select></label>
+            <span id="album-results" role="status"></span>
+          </div>
+          <p class="panel-sub">Search and inspect albums safely. Payment changes and deletion require enabling customer data changes.</p>
           <div class="table-wrap">
             <table class="hq-table">
               <thead>
@@ -151,6 +161,11 @@
     </main>
   </div>
 
+  <dialog id="album-inspector" aria-labelledby="inspector-title">
+    <div class="inspector-head"><h2 id="inspector-title">Album inspector</h2><button id="inspector-close" class="tbtn" type="button">Close</button></div>
+    <p class="panel-sub">Read-only admin inspection. No customer activity or counters are recorded.</p>
+    <div id="inspector-content" aria-live="polite"></div>
+  </dialog>
   <script type="module" src="assets/dashboard.js"></script>
 </body>
 </html>

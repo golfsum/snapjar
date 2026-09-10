@@ -23,3 +23,8 @@ export function upgradeUrlFor(code) {
 export function proUpgradeUrlFor(code) {
   return `/api/checkout?c=${encodeURIComponent(code)}&plan=pro`;
 }
+
+// Match the verified-email requirement in Firestore rules.
+export function isAdminUser(user) {
+  return !!user && user.email === ADMIN_EMAIL && user.emailVerified === true;
+}

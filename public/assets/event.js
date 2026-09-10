@@ -10,7 +10,7 @@ import {
   ref, uploadBytes, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-import { upgradeUrlFor } from "./config.js";
+import { upgradeUrlFor, isAdminUser } from "./config.js";
 import { track } from "./firebase-init.js";
 
 const FREE_PHOTO_LIMIT = 25;
@@ -111,6 +111,11 @@ async function init() {
 
   try {
     currentUser = await ensureSignedIn();
+    // Resolve authentication before reading or counting a visit.
+    if (isAdminUser(currentUser)) {
+      location.replace(`/dashboard-q7x2m9?album=${encodeURIComponent(code)}`);
+      return;
+    }
     const snap = await getDoc(doc(db, "events", code));
     if (!snap.exists()) return showMissing();
 
