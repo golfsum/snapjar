@@ -1,8 +1,8 @@
-// My albums. Local memory (this browser) plus, for signed-in accounts,
-// every album their uid hosts anywhere, fetched from Firestore.
+// Customer dashboard. Hosted albums come from Firestore ownership.
+// Joined albums are remembered per Firebase uid, never browser-wide.
 
 import { auth, db, track } from "./firebase-init.js";
-import { upgradeUrlFor, isAdminUser } from "./config.js";
+import { upgradeUrlFor } from "./config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, deleteDoc, collection, query, where, getDocs
@@ -10,65 +10,125 @@ import {
 
 let rendered = false;
 
+function scopedKey(base, uid) {
+  return `${base}:${uid}`;
+}
+
+function readList(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeList(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ }
+}
+
+function migrateCurrentSessionVisits(user) {
+  // Old versions used one browser-wide visited list. Do not inherit that list
+  // across accounts. Only migrate visits that happened after this Firebase
+  // user's most recent sign-in, then erase the browser-wide copy.
+  const legacy = readList("snapjar_visited");
+  if (!legacy.length) return;
+
+  const signedInAt = Date.parse(user?.metadata?.lastSignInTime || user?.metadata?.creationTime || "") || Date.now();
+  const safe = legacy.filter((item) => {
+    const at = Date.parse(item?.at || "");
+    return Number.isFinite(at) && at >= signedInAt;
+  });
+
+  if (safe.length) {
+    const key = scopedKey("snapjar_visited", user.uid);
+    const current = readList(key);
+    const merged = [...safe, ...current]
+      .filter((item, index, arr) => item?.code && arr.findIndex((x) => x.code === item.code) === index)
+      .slice(0, 30);
+    writeList(key, merged);
+  }
+
+  try { localStorage.removeItem("snapjar_visited"); } catch { /* ignore */ }
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (rendered) return;
+  rendered = true;
 
-  // The owner never participates in customer albums as a guest. Send admin
-  // straight to the read-only HQ inspector and remove any old local visit
-  // history left over from earlier versions of the app.
-  if (isAdminUser(user)) {
-    rendered = true;
-    try { localStorage.removeItem("snapjar_visited"); } catch { /* ignore */ }
-    location.replace("/dashboard-q7x2m9");
+  if (!user) {
+    document.getElementById("signedout-state").style.display = "block";
     return;
   }
 
-  rendered = true;
-
-  const localMine = JSON.parse(localStorage.getItem("snapjar_albums") || "[]");
-  let mine = [...localMine];
-
-  // Signed-in hosts get their albums from every device, not just this one.
-  if (user && !user.isAnonymous) {
-    try {
-      const snap = await getDocs(
-        query(collection(db, "events"), where("hostUid", "==", user.uid))
-      );
-      for (const d of snap.docs) {
-        if (!mine.some((m) => m.code === d.id)) {
-          mine.push({ code: d.id, name: d.data().name });
-        }
-      }
-    } catch (err) {
-      console.error("cloud album list failed", err);
+  // Record which account most recently opened the dashboard. This is only a
+  // privacy guard for cleaning up legacy browser-wide data.
+  try {
+    const previous = localStorage.getItem("snapjar_dashboard_uid");
+    if (previous && previous !== user.uid) {
+      localStorage.removeItem("snapjar_visited");
+      localStorage.removeItem("snapjar_albums");
     }
+    localStorage.setItem("snapjar_dashboard_uid", user.uid);
+  } catch { /* ignore */ }
+
+  migrateCurrentSessionVisits(user);
+
+  const mine = [];
+
+  // Firestore ownership is authoritative. A browser cache can never make an
+  // album appear as owned by a different account.
+  try {
+    const snap = await getDocs(
+      query(collection(db, "events"), where("hostUid", "==", user.uid))
+    );
+    for (const d of snap.docs) {
+      mine.push({ code: d.id, ...d.data() });
+    }
+  } catch (err) {
+    console.error("cloud album list failed", err);
   }
 
-  let joined = JSON.parse(localStorage.getItem("snapjar_visited") || "[]")
-    .filter((v) => !mine.some((m) => m.code === v.code));
+  const joinedKey = scopedKey("snapjar_visited", user.uid);
+  const joinedRaw = readList(joinedKey)
+    .filter((v) => v?.code && !mine.some((m) => m.code === v.code));
 
-  // Drop albums that have been deleted, and forget them locally, so the list
-  // only shows albums that still exist.
-  mine = await keepExisting(mine);
-  joined = await keepExisting(joined);
+  const joined = await keepExisting(joinedRaw, user.uid, false);
+  const owned = await keepExisting(mine, user.uid, true);
 
-  if (!mine.length && !joined.length) {
+  // Persist the cleaned joined list so deleted albums and stale records do not
+  // keep reappearing.
+  writeList(joinedKey, joined.map(({ code, name, at }) => ({ code, name, at })));
+
+  document.getElementById("hosted-count").textContent = owned.length;
+  document.getElementById("joined-count").textContent = joined.length;
+  document.getElementById("photo-count").textContent = owned
+    .reduce((sum, album) => sum + (album.photoCount || 0), 0)
+    .toLocaleString();
+
+  if (!owned.length && !joined.length) {
     document.getElementById("empty-state").style.display = "block";
     return;
   }
-  if (mine.length) renderSection("mine", mine, true);
+
+  if (owned.length) renderSection("mine", owned, true);
   if (joined.length) renderSection("joined", joined, false);
 });
 
-async function keepExisting(list) {
+async function keepExisting(list, uid, mustOwn) {
   const out = [];
   for (const a of list) {
     try {
       const snap = await getDoc(doc(db, "events", a.code));
-      if (snap.exists()) out.push({ ...a, name: snap.data().name || a.name });
-      else forgetLocal(a.code);
+      if (!snap.exists()) continue;
+      const data = snap.data();
+      const isOwner = data.hostUid === uid;
+      if (mustOwn && !isOwner) continue;
+      if (!mustOwn && isOwner) continue;
+      out.push({ ...a, ...data, code: a.code, name: data.name || a.name });
     } catch {
-      out.push(a); // offline: keep it rather than lose it
+      // Do not surface unverifiable cross-account albums while offline.
+      // Owned albums will return from Firestore when connectivity is restored.
     }
   }
   return out;
@@ -77,6 +137,7 @@ async function keepExisting(list) {
 function renderSection(prefix, list, isMine) {
   document.getElementById(`${prefix}-section`).style.display = "block";
   const container = document.getElementById(`${prefix}-list`);
+  container.innerHTML = "";
 
   for (const album of list) {
     const card = document.createElement("div");
@@ -87,12 +148,18 @@ function renderSection(prefix, list, isMine) {
 
     const name = document.createElement("a");
     name.className = "album-card-name";
-    name.href = `/event?c=${album.code}`;
+    name.href = `/event?c=${encodeURIComponent(album.code)}`;
     name.textContent = album.name || album.code;
 
     const status = document.createElement("span");
-    status.className = "tag tag-free";
-    status.textContent = "checking...";
+    const photos = album.photoCount || 0;
+    if (album.paid) {
+      status.className = "tag tag-paid";
+      status.textContent = `Paid · ${photos} photos`;
+    } else {
+      status.className = "tag tag-free";
+      status.textContent = `Free · ${photos}/25 photos`;
+    }
 
     top.append(name, status);
 
@@ -101,41 +168,17 @@ function renderSection(prefix, list, isMine) {
 
     const open = document.createElement("a");
     open.className = "btn btn-small";
-    open.href = `/event?c=${album.code}`;
+    open.href = `/event?c=${encodeURIComponent(album.code)}`;
     open.textContent = "Open";
     actions.appendChild(open);
 
     const qr = document.createElement("a");
     qr.className = "btn btn-small btn-outline";
-    qr.href = `/event?c=${album.code}#share`;
+    qr.href = `/event?c=${encodeURIComponent(album.code)}#share`;
     qr.textContent = "QR & share";
     actions.appendChild(qr);
 
-    card.append(top, actions);
-    container.appendChild(card);
-
-    fillStatus(album, status, actions, card, isMine);
-  }
-}
-
-async function fillStatus(album, statusEl, actionsEl, cardEl, isMine) {
-  try {
-    const snap = await getDoc(doc(db, "events", album.code));
-    if (!snap.exists()) {
-      statusEl.textContent = "deleted";
-      return;
-    }
-    const data = snap.data();
-    const photos = data.photoCount || 0;
-    const ownedByMe = auth.currentUser && data.hostUid === auth.currentUser.uid;
-
-    if (data.paid) {
-      statusEl.className = "tag tag-paid";
-      statusEl.textContent = `Paid · ${photos} photos`;
-    } else {
-      statusEl.className = "tag tag-free";
-      statusEl.textContent = `Free · ${photos}/25 photos`;
-
+    if (!album.paid) {
       const upgrade = document.createElement("a");
       upgrade.className = "btn btn-small btn-outline";
       upgrade.href = upgradeUrlFor(album.code);
@@ -144,11 +187,10 @@ async function fillStatus(album, statusEl, actionsEl, cardEl, isMine) {
       upgrade.textContent = isMine ? "Upgrade, $19.99" : "Gift unlimited, $19.99";
       upgrade.addEventListener("click", () =>
         track("upgrade_click", { album: album.code, from: "albums-page" }));
-      actionsEl.appendChild(upgrade);
+      actions.appendChild(upgrade);
     }
 
-    // Deleting is a host power, verified server-side by the rules.
-    if (ownedByMe) {
+    if (isMine) {
       const del = document.createElement("button");
       del.className = "mini-btn mini-danger";
       del.textContent = "Delete";
@@ -160,25 +202,28 @@ async function fillStatus(album, statusEl, actionsEl, cardEl, isMine) {
         del.disabled = true;
         try {
           await deleteDoc(doc(db, "events", album.code));
-          forgetLocal(album.code);
-          cardEl.remove();
+          forgetScoped(album.code, auth.currentUser?.uid);
+          card.remove();
+          location.reload();
         } catch (err) {
           console.error(err);
           del.disabled = false;
           alert("Couldn't delete it just now. Try again in a minute.");
         }
       });
-      actionsEl.appendChild(del);
+      actions.appendChild(del);
     }
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = "offline";
+
+    card.append(top, actions);
+    container.appendChild(card);
   }
 }
 
-function forgetLocal(code) {
-  for (const key of ["snapjar_albums", "snapjar_visited"]) {
-    const list = JSON.parse(localStorage.getItem(key) || "[]").filter((a) => a.code !== code);
-    localStorage.setItem(key, JSON.stringify(list));
+function forgetScoped(code, uid) {
+  if (!uid) return;
+  for (const base of ["snapjar_albums", "snapjar_visited"]) {
+    const key = scopedKey(base, uid);
+    const list = readList(key).filter((a) => a.code !== code);
+    writeList(key, list);
   }
 }
