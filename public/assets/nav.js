@@ -1,19 +1,28 @@
-// Shows account state in the nav on app pages. Signed in: your email,
-// linking to settings. Signed out or guest: a quiet Sign in link.
+// Shows account state in the nav. Signed-out users get Sign in.
+// Signed-in customers get My albums. The verified owner gets Admin HQ.
 
 import { auth } from "./firebase-init.js";
+import { isAdminUser } from "./config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const chip = document.getElementById("nav-account");
 
 if (chip) {
   onAuthStateChanged(auth, (user) => {
+    if (isAdminUser(user)) {
+      chip.textContent = "Admin HQ";
+      chip.href = "/dashboard-q7x2m9";
+      chip.title = user.email || "Admin dashboard";
+      return;
+    }
+
     if (user && !user.isAnonymous) {
-      const label = user.email || user.displayName || "Account";
-      chip.textContent = label.length > 22 ? label.slice(0, 20) + "..." : label;
-      chip.title = label;
+      chip.textContent = "My albums";
+      chip.href = "/albums";
+      chip.title = user.email || user.displayName || "My albums";
     } else {
       chip.textContent = "Sign in";
+      chip.href = "/settings";
       chip.title = "";
     }
   });
