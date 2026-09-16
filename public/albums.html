@@ -3,13 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My albums · Snapjar</title>
+  <title>Dashboard · Snapjar</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .user-dashboard{max-width:1040px;margin:0 auto;padding:48px clamp(20px,5vw,56px) 80px}
+    .dash-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:28px}
+    .dash-head h1{font-size:clamp(2rem,4vw,3rem);margin-bottom:8px}.dash-head p{color:var(--ink-soft);max-width:620px}
+    .dash-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .dash-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0 34px}
+    .dash-stat{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.03)}
+    .dash-stat span{display:block;color:var(--ink-soft);font-size:.85rem;font-weight:600}.dash-stat strong{display:block;font-size:1.8rem;margin-top:4px}
+    .dash-section{margin-top:30px}.dash-section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:12px}
+    .dash-section-head h2{font-size:1.25rem}.dash-section-head p{color:var(--ink-soft);font-size:.9rem}
+    .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .dashboard-grid .album-card{margin:0}
+    .dash-empty{padding:38px;text-align:center;border:1px dashed var(--line);border-radius:16px;background:var(--paper-deep)}
+    .dash-empty p{color:var(--ink-soft);margin-bottom:16px}
+    .signedout-note{display:none}
+    @media(max-width:760px){.dash-head{display:block}.dash-actions{margin-top:18px}.dash-stats,.dashboard-grid{grid-template-columns:1fr}.user-dashboard{padding-top:30px}}
+  </style>
   <script src="/assets/site.js" defer></script>
 </head>
 <body>
@@ -18,28 +35,49 @@
     <a class="logo" href="/"><img class="logo-mark" src="/assets/logo.svg" alt="Snapjar"><span class="logo-txt">snap<i>jar</i></span></a>
     <div class="nav-links">
       <a id="nav-account" href="/settings">Sign in</a>
+      <a href="/settings">Account</a>
       <a href="/create" class="btn btn-small">New album</a>
     </div>
   </nav>
 
-  <main class="app-main">
-    <h1>My albums</h1>
-    <p class="app-sub">Albums live in this browser. If you made one on another device, open it there or use its link.</p>
+  <main class="user-dashboard">
+    <div class="dash-head">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Your albums and the private albums you have opened from a valid Snapjar link or QR code.</p>
+      </div>
+      <div class="dash-actions">
+        <a href="/create" class="btn">Create album</a>
+        <a href="/settings" class="btn btn-outline">Account settings</a>
+      </div>
+    </div>
 
-    <div id="empty-state" class="card" style="display:none;text-align:center">
-      <p style="margin-bottom:18px;color:var(--ink-soft)">No albums on this device yet.</p>
+    <div class="dash-stats">
+      <div class="dash-stat"><span>Albums you host</span><strong id="hosted-count">0</strong></div>
+      <div class="dash-stat"><span>Albums you've joined</span><strong id="joined-count">0</strong></div>
+      <div class="dash-stat"><span>Photos in hosted albums</span><strong id="photo-count">0</strong></div>
+    </div>
+
+    <div id="signedout-state" class="card signedout-note">
+      <h2 class="card-heading">Sign in to your dashboard</h2>
+      <p class="card-sub">Your dashboard is tied to your Snapjar account so another person using this browser cannot see your albums.</p>
+      <a class="btn" href="/settings">Sign in</a>
+    </div>
+
+    <div id="empty-state" class="dash-empty" style="display:none">
+      <p>No albums are connected to this account yet.</p>
       <a class="btn" href="/create">Create your first album</a>
     </div>
 
-    <div id="mine-section" style="display:none">
-      <h2 class="albums-heading">Albums you host</h2>
-      <div id="mine-list"></div>
-    </div>
+    <section id="mine-section" class="dash-section" style="display:none">
+      <div class="dash-section-head"><div><h2>Albums you host</h2><p>Albums created by this account.</p></div></div>
+      <div id="mine-list" class="dashboard-grid"></div>
+    </section>
 
-    <div id="joined-section" style="display:none">
-      <h2 class="albums-heading">Albums you've joined</h2>
-      <div id="joined-list"></div>
-    </div>
+    <section id="joined-section" class="dash-section" style="display:none">
+      <div class="dash-section-head"><div><h2>Albums you've joined</h2><p>Albums opened from their private link or QR code while using this account.</p></div></div>
+      <div id="joined-list" class="dashboard-grid"></div>
+    </section>
   </main>
 
   <script type="module" src="assets/albums.js"></script>
