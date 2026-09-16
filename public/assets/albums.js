@@ -2,7 +2,7 @@
 // every album their uid hosts anywhere, fetched from Firestore.
 
 import { auth, db, track } from "./firebase-init.js";
-import { upgradeUrlFor } from "./config.js";
+import { upgradeUrlFor, isAdminUser } from "./config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, deleteDoc, collection, query, where, getDocs
@@ -12,6 +12,17 @@ let rendered = false;
 
 onAuthStateChanged(auth, async (user) => {
   if (rendered) return;
+
+  // The owner never participates in customer albums as a guest. Send admin
+  // straight to the read-only HQ inspector and remove any old local visit
+  // history left over from earlier versions of the app.
+  if (isAdminUser(user)) {
+    rendered = true;
+    try { localStorage.removeItem("snapjar_visited"); } catch { /* ignore */ }
+    location.replace("/dashboard-q7x2m9");
+    return;
+  }
+
   rendered = true;
 
   const localMine = JSON.parse(localStorage.getItem("snapjar_albums") || "[]");
