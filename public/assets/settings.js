@@ -29,6 +29,12 @@ function applyAuthUi() {
   }
 }
 
+function finishSignIn(method) {
+  track("account_signin", { method });
+  applyAuthUi();
+  location.assign("/albums");
+}
+
 onAuthStateChanged(auth, applyAuthUi);
 
 function showAuthError(msg) {
@@ -50,16 +56,14 @@ document.getElementById("google-btn").addEventListener("click", async () => {
     } else {
       await signInWithPopup(auth, provider);
     }
-    track("account_signin", { method: "google" });
-    applyAuthUi();
+    finishSignIn("google");
   } catch (err) {
     if (err.code === "auth/credential-already-in-use") {
-      // They already have an account with this Google identity. Sign into it.
-      // Albums made in this guest session stay with the old anonymous uid,
-      // but this device's My Albums list still remembers them.
+      // This Google identity already has an account. Sign into that account;
+      // the dashboard will show only data owned by or accessed by its uid.
       try {
         await signInWithPopup(auth, provider);
-        track("account_signin", { method: "google" });
+        finishSignIn("google");
         return;
       } catch (err2) {
         console.error(err2);
@@ -92,14 +96,13 @@ document.getElementById("email-btn").addEventListener("click", async () => {
     } else {
       await createUserWithEmailAndPassword(auth, email, password);
     }
-    track("account_signin", { method: "email_new" });
-    applyAuthUi();
+    finishSignIn("email_new");
   } catch (err) {
     if (err.code === "auth/email-already-in-use" || err.code === "auth/credential-already-in-use") {
       // Existing account: sign into it instead.
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        track("account_signin", { method: "email" });
+        finishSignIn("email");
         return;
       } catch (err2) {
         console.error(err2);
