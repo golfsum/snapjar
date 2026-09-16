@@ -70,12 +70,74 @@ async function loadDashboard() {
   }
 }
 
-function sourceLabel(a) {
-  const attr = a.attribution || {};
-  const source = attr.source || "unknown";
-  const medium = attr.utmMedium ? ` / ${attr.utmMedium}` : "";
-  const campaign = attr.utmCampaign ? ` · ${attr.utmCampaign}` : "";
-  return `${source}${medium}${campaign}`;
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function compactTouch(attr) {
+  const source = cleanText(attr?.source) || "unknown";
+  const medium = cleanText(attr?.utmMedium);
+  const campaign = cleanText(attr?.utmCampaign);
+  const domain = cleanText(attr?.referringDomain) || referrerDomain(attr?.referrer);
+  const landing = cleanText(attr?.landingPage);
+
+  let text = source;
+  if (medium) text += ` / ${medium}`;
+  if (campaign) text += ` · ${campaign}`;
+  if (domain) text += ` · ${domain}`;
+  if (landing) text += ` → ${landing}`;
+  return text;
+}
+
+function referrerDomain(referrer) {
+  try {
+    return referrer ? new URL(referrer).hostname.replace(/^www\./, "") : "";
+  } catch {
+    return "";
+  }
+}
+
+function addAttributionDetails(cell, album) {
+  const legacy = album.attribution || {};
+  const first = album.firstTouchAttribution || legacy;
+  const last = album.lastTouchAttribution || legacy;
+
+  const firstLine = document.createElement("div");
+  firstLine.className = "cell-sub";
+  firstLine.textContent = "first: " + compactTouch(first);
+  cell.appendChild(firstLine);
+
+  const changed = JSON.stringify(first || {}) !== JSON.stringify(last || {});
+  if (changed) {
+    const lastLine = document.createElement("div");
+    lastLine.className = "cell-sub";
+    lastLine.textContent = "created after: " + compactTouch(last);
+    cell.appendChild(lastLine);
+  }
+
+  const referrer = cleanText(last?.referrer || first?.referrer);
+  if (referrer) {
+    const refLine = document.createElement("div");
+    refLine.className = "cell-sub";
+    refLine.textContent = "referrer: " + referrer;
+    refLine.title = referrer;
+    cell.appendChild(refLine);
+  }
+
+  const campaignParts = [];
+  const campaignSource = cleanText(last?.utmSource || first?.utmSource);
+  const campaignMedium = cleanText(last?.utmMedium || first?.utmMedium);
+  const campaignName = cleanText(last?.utmCampaign || first?.utmCampaign);
+  if (campaignSource) campaignParts.push(campaignSource);
+  if (campaignMedium) campaignParts.push(campaignMedium);
+  if (campaignName) campaignParts.push(campaignName);
+
+  if (campaignParts.length) {
+    const campaignLine = document.createElement("div");
+    campaignLine.className = "cell-sub";
+    campaignLine.textContent = "utm: " + campaignParts.join(" / ");
+    cell.appendChild(campaignLine);
+  }
 }
 
 function render() {
@@ -112,10 +174,7 @@ function render() {
       host.textContent = "host: " + a.hostName;
       name.appendChild(host);
     }
-    const source = document.createElement("div");
-    source.className = "cell-sub";
-    source.textContent = "source: " + sourceLabel(a);
-    name.appendChild(source);
+    addAttributionDetails(name, a);
 
     const code = document.createElement("td");
     code.className = "cell-mono";
