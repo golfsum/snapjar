@@ -1,7 +1,8 @@
 // Album creation flow.
 
-import { db, ensureSignedIn, track, getAttributionSnapshot } from "./firebase-init.js";
+import { auth, db, ensureSignedIn, track, getAttributionSnapshot } from "./firebase-init.js";
 import { upgradeUrlFor } from "./config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -33,10 +34,25 @@ function showError(msg) {
   errorEl.classList.add("show");
 }
 
-function rememberAlbum(code, name) {
-  const list = JSON.parse(localStorage.getItem("snapjar_albums") || "[]");
+function scopedKey(base, uid) {
+  return `${base}:${uid}`;
+}
+
+function readList(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberAlbum(code, name, user) {
+  if (!user?.uid) return;
+  const key = scopedKey("snapjar_albums", user.uid);
+  const list = readList(key).filter((item) => item.code !== code);
   list.unshift({ code, name, createdAt: new Date().toISOString() });
-  localStorage.setItem("snapjar_albums", JSON.stringify(list.slice(0, 20)));
+  try { localStorage.setItem(key, JSON.stringify(list.slice(0, 20))); } catch { /* ignore */ }
 }
 
 form.addEventListener("submit", async (e) => {
@@ -77,7 +93,7 @@ form.addEventListener("submit", async (e) => {
       createdAt: serverTimestamp()
     });
 
-    rememberAlbum(code, eventName);
+    rememberAlbum(code, eventName, user);
     track("album_created", {
       album: code,
       source: attribution.lastTouch.source || attribution.firstTouch.source || "unknown",
@@ -132,9 +148,13 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
   setTimeout(() => (btn.textContent = "Copy"), 1600);
 });
 
-// Show albums this device already made, so hosts can get back in.
-(function renderPastAlbums() {
-  const list = JSON.parse(localStorage.getItem("snapjar_albums") || "[]");
+// Only show albums remembered for the current Firebase uid. Another account
+// using the same browser never inherits this list.
+let pastRendered = false;
+onAuthStateChanged(auth, (user) => {
+  if (pastRendered || !user?.uid) return;
+  pastRendered = true;
+  const list = readList(scopedKey("snapjar_albums", user.uid));
   if (!list.length) return;
 
   const wrap = document.getElementById("past-events");
@@ -152,4 +172,4 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
     a.append(name, chip);
     container.appendChild(a);
   }
-})();
+});
