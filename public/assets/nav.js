@@ -6,6 +6,7 @@ import { isAdminUser } from "./config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const chip = document.getElementById("nav-account");
+const mobileQuery = window.matchMedia("(max-width: 640px)");
 
 function syncAdminLink(show) {
   if (!chip) return;
@@ -25,6 +26,7 @@ function syncAdminLink(show) {
     if (firstButton) links.insertBefore(admin, firstButton);
     else links?.appendChild(admin);
   }
+  admin.style.display = mobileQuery.matches ? "none" : "";
 }
 
 function syncSignOut(show) {
@@ -53,6 +55,27 @@ function syncSignOut(show) {
     if (firstButton) links.insertBefore(link, firstButton);
     else links?.appendChild(link);
   }
+  // The shared stylesheet hides non-button nav links on small screens. Force
+  // Sign out back on so mobile users always have an obvious exit.
+  link.style.display = mobileQuery.matches ? "inline-flex" : "none";
+  link.style.alignItems = "center";
+  link.style.whiteSpace = "nowrap";
+}
+
+function syncMobileLayout() {
+  if (!chip) return;
+  const links = chip.parentElement;
+  if (links) {
+    links.style.gap = mobileQuery.matches ? "12px" : "";
+    links.style.flexWrap = "nowrap";
+  }
+  chip.style.display = "inline-flex";
+  chip.style.alignItems = "center";
+  chip.style.whiteSpace = "nowrap";
+  const admin = document.getElementById("nav-admin");
+  if (admin) admin.style.display = mobileQuery.matches ? "none" : "";
+  const signout = document.getElementById("nav-signout");
+  if (signout) signout.style.display = mobileQuery.matches ? "inline-flex" : "none";
 }
 
 if (chip) {
@@ -70,5 +93,8 @@ if (chip) {
       chip.href = "/settings";
       chip.title = "";
     }
+    syncMobileLayout();
   });
+
+  mobileQuery.addEventListener?.("change", syncMobileLayout);
 }
