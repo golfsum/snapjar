@@ -10,59 +10,29 @@ import {
 
 let rendered = false;
 
-function scopedKey(base, uid) {
-  return `${base}:${uid}`;
-}
-
-function readList(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) || "[]");
-    return Array.isArray(value) ? value : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeList(key, list) {
-  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ }
-}
+function scopedKey(base, uid) { return `${base}:${uid}`; }
+function readList(key) { try { const value = JSON.parse(localStorage.getItem(key) || "[]"); return Array.isArray(value) ? value : []; } catch { return []; } }
+function writeList(key, list) { try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ } }
 
 function migrateCurrentSessionVisits(user) {
-  // Old versions used one browser-wide visited list. Do not inherit that list
-  // across accounts. Only migrate visits that happened after this Firebase
-  // user's most recent sign-in, then erase the browser-wide copy.
   const legacy = readList("snapjar_visited");
   if (!legacy.length) return;
-
   const signedInAt = Date.parse(user?.metadata?.lastSignInTime || user?.metadata?.creationTime || "") || Date.now();
-  const safe = legacy.filter((item) => {
-    const at = Date.parse(item?.at || "");
-    return Number.isFinite(at) && at >= signedInAt;
-  });
-
+  const safe = legacy.filter((item) => { const at = Date.parse(item?.at || ""); return Number.isFinite(at) && at >= signedInAt; });
   if (safe.length) {
     const key = scopedKey("snapjar_visited", user.uid);
     const current = readList(key);
-    const merged = [...safe, ...current]
-      .filter((item, index, arr) => item?.code && arr.findIndex((x) => x.code === item.code) === index)
-      .slice(0, 30);
+    const merged = [...safe, ...current].filter((item, index, arr) => item?.code && arr.findIndex((x) => x.code === item.code) === index).slice(0, 30);
     writeList(key, merged);
   }
-
   try { localStorage.removeItem("snapjar_visited"); } catch { /* ignore */ }
 }
 
 onAuthStateChanged(auth, async (user) => {
   if (rendered) return;
   rendered = true;
+  if (!user) { document.getElementById("signedout-state").style.display = "block"; return; }
 
-  if (!user) {
-    document.getElementById("signedout-state").style.display = "block";
-    return;
-  }
-
-  // Record which account most recently opened the dashboard. This is only a
-  // privacy guard for cleaning up legacy browser-wide data.
   try {
     const previous = localStorage.getItem("snapjar_dashboard_uid");
     if (previous && previous !== user.uid) {
@@ -73,44 +43,23 @@ onAuthStateChanged(auth, async (user) => {
   } catch { /* ignore */ }
 
   migrateCurrentSessionVisits(user);
-
   const mine = [];
-
-  // Firestore ownership is authoritative. A browser cache can never make an
-  // album appear as owned by a different account.
   try {
-    const snap = await getDocs(
-      query(collection(db, "events"), where("hostUid", "==", user.uid))
-    );
-    for (const d of snap.docs) {
-      mine.push({ code: d.id, ...d.data() });
-    }
-  } catch (err) {
-    console.error("cloud album list failed", err);
-  }
+    const snap = await getDocs(query(collection(db, "events"), where("hostUid", "==", user.uid)));
+    for (const d of snap.docs) mine.push({ code: d.id, ...d.data() });
+  } catch (err) { console.error("cloud album list failed", err); }
 
   const joinedKey = scopedKey("snapjar_visited", user.uid);
-  const joinedRaw = readList(joinedKey)
-    .filter((v) => v?.code && !mine.some((m) => m.code === v.code));
-
+  const joinedRaw = readList(joinedKey).filter((v) => v?.code && !mine.some((m) => m.code === v.code));
   const joined = await keepExisting(joinedRaw, user.uid, false);
   const owned = await keepExisting(mine, user.uid, true);
-
-  // Persist the cleaned joined list so deleted albums and stale records do not
-  // keep reappearing.
   writeList(joinedKey, joined.map(({ code, name, at }) => ({ code, name, at })));
 
   document.getElementById("hosted-count").textContent = owned.length;
   document.getElementById("joined-count").textContent = joined.length;
-  document.getElementById("photo-count").textContent = owned
-    .reduce((sum, album) => sum + (album.photoCount || 0), 0)
-    .toLocaleString();
+  document.getElementById("photo-count").textContent = owned.reduce((sum, album) => sum + (album.photoCount || 0), 0).toLocaleString();
 
-  if (!owned.length && !joined.length) {
-    document.getElementById("empty-state").style.display = "block";
-    return;
-  }
-
+  if (!owned.length && !joined.length) { document.getElementById("empty-state").style.display = "block"; return; }
   if (owned.length) renderSection("mine", owned, true);
   if (joined.length) renderSection("joined", joined, false);
 });
@@ -126,12 +75,15 @@ async function keepExisting(list, uid, mustOwn) {
       if (mustOwn && !isOwner) continue;
       if (!mustOwn && isOwner) continue;
       out.push({ ...a, ...data, code: a.code, name: data.name || a.name });
-    } catch {
-      // Do not surface unverifiable cross-account albums while offline.
-      // Owned albums will return from Firestore when connectivity is restored.
-    }
+    } catch { /* do not surface unverifiable albums */ }
   }
   return out;
+}
+
+function planLabel(album) {
+  if (album.pro) return "Pro · videos up to 5 min";
+  if (album.paid) return "Party · videos up to 1 min";
+  return "Free · photos only";
 }
 
 function renderSection(prefix, list, isMine) {
@@ -142,7 +94,6 @@ function renderSection(prefix, list, isMine) {
   for (const album of list) {
     const card = document.createElement("div");
     card.className = "album-card";
-
     const top = document.createElement("div");
     top.className = "album-card-top";
 
@@ -153,30 +104,22 @@ function renderSection(prefix, list, isMine) {
 
     const status = document.createElement("span");
     const photos = album.photoCount || 0;
-    if (album.paid) {
-      status.className = "tag tag-paid";
-      status.textContent = `Paid · ${photos} photos`;
-    } else {
-      status.className = "tag tag-free";
-      status.textContent = `Free · ${photos}/25 photos`;
-    }
-
+    status.className = album.paid ? "tag tag-paid" : "tag tag-free";
+    status.textContent = `${planLabel(album)} · ${photos}${album.paid ? " photos" : "/25 photos"}`;
     top.append(name, status);
+
+    const allowance = document.createElement("p");
+    allowance.style.cssText = "margin:8px 0 2px;color:var(--ink-soft);font-size:.86rem";
+    allowance.textContent = album.pro
+      ? "Video allowance: up to 5 minutes per clip (300 MB max)."
+      : album.paid
+        ? "Video allowance: up to 1 minute per clip (100 MB max)."
+        : "Video uploads unlock with Party or Pro.";
 
     const actions = document.createElement("div");
     actions.className = "album-card-actions";
-
-    const open = document.createElement("a");
-    open.className = "btn btn-small";
-    open.href = `/event?c=${encodeURIComponent(album.code)}`;
-    open.textContent = "Open";
-    actions.appendChild(open);
-
-    const qr = document.createElement("a");
-    qr.className = "btn btn-small btn-outline";
-    qr.href = `/event?c=${encodeURIComponent(album.code)}#share`;
-    qr.textContent = "QR & share";
-    actions.appendChild(qr);
+    const open = document.createElement("a"); open.className = "btn btn-small"; open.href = `/event?c=${encodeURIComponent(album.code)}`; open.textContent = "Open"; actions.appendChild(open);
+    const qr = document.createElement("a"); qr.className = "btn btn-small btn-outline"; qr.href = `/event?c=${encodeURIComponent(album.code)}#share`; qr.textContent = "QR & share"; actions.appendChild(qr);
 
     if (!album.paid) {
       const upgrade = document.createElement("a");
@@ -184,9 +127,8 @@ function renderSection(prefix, list, isMine) {
       upgrade.href = upgradeUrlFor(album.code);
       upgrade.target = "_blank";
       upgrade.rel = "noopener";
-      upgrade.textContent = isMine ? "Upgrade, $19.99" : "Gift unlimited, $19.99";
-      upgrade.addEventListener("click", () =>
-        track("upgrade_click", { album: album.code, from: "albums-page" }));
+      upgrade.textContent = isMine ? "Party + video, $19.99" : "Gift Party, $19.99";
+      upgrade.addEventListener("click", () => track("upgrade_click", { album: album.code, from: "albums-page" }));
       actions.appendChild(upgrade);
     }
 
@@ -195,9 +137,7 @@ function renderSection(prefix, list, isMine) {
       del.className = "mini-btn mini-danger";
       del.textContent = "Delete";
       del.addEventListener("click", async () => {
-        const sure = confirm(
-          `Delete "${album.name || album.code}" for everyone? Guests lose access immediately. This can't be undone.`
-        );
+        const sure = confirm(`Delete "${album.name || album.code}" for everyone? Guests lose access immediately. This can't be undone.`);
         if (!sure) return;
         del.disabled = true;
         try {
@@ -214,7 +154,7 @@ function renderSection(prefix, list, isMine) {
       actions.appendChild(del);
     }
 
-    card.append(top, actions);
+    card.append(top, allowance, actions);
     container.appendChild(card);
   }
 }
