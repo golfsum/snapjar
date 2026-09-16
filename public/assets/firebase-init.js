@@ -24,7 +24,8 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-const ATTRIBUTION_KEY = "snapjar_first_touch";
+const FIRST_TOUCH_KEY = "snapjar_first_touch";
+const LAST_TOUCH_KEY = "snapjar_last_touch";
 
 function classifySource({ utmSource, referrer, gclid, fbclid }) {
   const source = String(utmSource || "").trim().toLowerCase();
@@ -41,48 +42,107 @@ function classifySource({ utmSource, referrer, gclid, fbclid }) {
   return "direct";
 }
 
-function captureFirstTouch() {
+function referringDomain(referrer) {
   try {
-    const existing = localStorage.getItem(ATTRIBUTION_KEY);
-    if (existing) return JSON.parse(existing);
-    const params = new URLSearchParams(location.search);
-    const attribution = {
-      source: "",
-      utmSource: params.get("utm_source") || "",
-      utmMedium: params.get("utm_medium") || "",
-      utmCampaign: params.get("utm_campaign") || "",
-      utmTerm: params.get("utm_term") || "",
-      utmContent: params.get("utm_content") || "",
-      gclid: params.get("gclid") || "",
-      fbclid: params.get("fbclid") || "",
-      referrer: document.referrer || "",
-      landingPage: location.pathname + location.search,
-      capturedAt: new Date().toISOString()
-    };
-    attribution.source = classifySource(attribution);
-    localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
-    return attribution;
+    return referrer ? new URL(referrer).hostname.replace(/^www\./, "") : "";
   } catch {
-    return {
-      source: "unknown",
-      utmSource: "",
-      utmMedium: "",
-      utmCampaign: "",
-      utmTerm: "",
-      utmContent: "",
-      gclid: "",
-      fbclid: "",
-      referrer: "",
-      landingPage: location.pathname,
-      capturedAt: new Date().toISOString()
-    };
+    return "";
   }
 }
 
-const firstTouchAttribution = captureFirstTouch();
+function readStored(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildTouch() {
+  const params = new URLSearchParams(location.search);
+  const referrer = document.referrer || "";
+  const touch = {
+    source: "",
+    utmSource: params.get("utm_source") || "",
+    utmMedium: params.get("utm_medium") || "",
+    utmCampaign: params.get("utm_campaign") || "",
+    utmTerm: params.get("utm_term") || "",
+    utmContent: params.get("utm_content") || "",
+    gclid: params.get("gclid") || "",
+    fbclid: params.get("fbclid") || "",
+    referrer,
+    referringDomain: referringDomain(referrer),
+    landingPage: location.pathname + location.search,
+    capturedAt: new Date().toISOString()
+  };
+  touch.source = classifySource(touch);
+  return touch;
+}
+
+function isSameOriginReferrer(referrer) {
+  if (!referrer) return false;
+  try {
+    return new URL(referrer).origin === location.origin;
+  } catch {
+    return false;
+  }
+}
+
+function hasCampaignSignal(touch) {
+  return Boolean(
+    touch.utmSource || touch.utmMedium || touch.utmCampaign || touch.utmTerm ||
+    touch.utmContent || touch.gclid || touch.fbclid
+  );
+}
+
+function captureAttribution() {
+  const current = buildTouch();
+  let first = readStored(FIRST_TOUCH_KEY);
+  let last = readStored(LAST_TOUCH_KEY);
+
+  try {
+    if (!first) {
+      first = current;
+      localStorage.setItem(FIRST_TOUCH_KEY, JSON.stringify(first));
+    }
+
+    // Only replace last touch with a meaningful acquisition touch. Internal
+    // navigation to /create should not overwrite the external source that led
+    // the visitor into SnapJar.
+    const meaningful = hasCampaignSignal(current) ||
+      (current.referrer && !isSameOriginReferrer(current.referrer)) ||
+      (!last && current.source === "direct");
+
+    if (meaningful) {
+      last = current;
+      localStorage.setItem(LAST_TOUCH_KEY, JSON.stringify(last));
+    }
+  } catch {
+    // localStorage can be unavailable in hardened/private browser contexts.
+  }
+
+  return {
+    firstTouch: first || current,
+    lastTouch: last || first || current
+  };
+}
+
+const attributionSnapshot = captureAttribution();
 
 export function getFirstTouchAttribution() {
-  return { ...firstTouchAttribution };
+  return { ...attributionSnapshot.firstTouch };
+}
+
+export function getLastTouchAttribution() {
+  return { ...attributionSnapshot.lastTouch };
+}
+
+export function getAttributionSnapshot() {
+  return {
+    firstTouch: { ...attributionSnapshot.firstTouch },
+    lastTouch: { ...attributionSnapshot.lastTouch }
+  };
 }
 
 // Sitewide analytics is loaded by /assets/site.js, including SEO pages.
