@@ -7,15 +7,33 @@
   // Keep owner-only dashboard activity out of acquisition and conversion data.
   if (path === "/dashboard-q7x2m9" || path === "/admin-q7x2m9") return;
 
-  // Album pages must resolve the persisted account before analytics starts.
-  // Do not create an anonymous account just to decide whether to track.
+  // Album pages resolve the real Firebase identity before analytics or access
+  // history. A successfully opened album is remembered only for that uid.
   if (path === "/event") {
     try {
-      const [{ auth }, { isAdminUser }] = await Promise.all([
-        import("./firebase-init.js"), import("./config.js")
+      const [{ auth, db, ensureSignedIn }, { isAdminUser }, firestore] = await Promise.all([
+        import("./firebase-init.js"),
+        import("./config.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
       ]);
-      await auth.authStateReady();
-      if (isAdminUser(auth.currentUser)) return;
+      const user = await ensureSignedIn();
+      if (isAdminUser(user)) return;
+
+      const code = new URLSearchParams(location.search).get("c");
+      if (code) {
+        const snap = await firestore.getDoc(firestore.doc(db, "events", code));
+        if (snap.exists()) {
+          const key = `snapjar_visited:${user.uid}`;
+          let list = [];
+          try {
+            const value = JSON.parse(localStorage.getItem(key) || "[]");
+            list = Array.isArray(value) ? value : [];
+          } catch { list = []; }
+          list = list.filter((item) => item?.code !== code);
+          list.unshift({ code, name: snap.data().name || code, at: new Date().toISOString() });
+          try { localStorage.setItem(key, JSON.stringify(list.slice(0, 30))); } catch { /* private mode */ }
+        }
+      }
     } catch { return; }
   }
 
