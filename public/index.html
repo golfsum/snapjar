@@ -3,245 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snapjar | QR Code Photo Sharing for Weddings and Parties</title>
-  <meta name="description" content="Collect every guest photo in one shared album with a QR code. No app or guest accounts required. Free to start, with unlimited photos from $19.99.">
+  <title>Snapjar | QR Photo & Video Sharing for Events</title>
+  <meta name="description" content="Collect every guest photo and video in one shared event album with a QR code. No app required. Free for photos, paid plans add video uploads.">
   <link rel="canonical" href="https://getsnapjar.com/">
-  <meta name="theme-color" content="#faf6ef">
+  <meta name="theme-color" content="#fbf8f2">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://getsnapjar.com/">
   <meta property="og:site_name" content="Snapjar">
-  <meta property="og:title" content="Snapjar. Every photo from your party, in one place.">
-  <meta property="og:description" content="Guests scan a QR code and every photo they take lands in one shared album. No app, no accounts, works on any phone.">
+  <meta property="og:title" content="Collect every photo and video from your event">
+  <meta property="og:description" content="Create an album, share one QR code, and let guests upload their photos and videos. No app required.">
   <meta property="og:image" content="https://getsnapjar.com/assets/img/og.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Snapjar. Every photo from your party, in one place.">
-  <meta name="twitter:description" content="Guests scan a QR code and every photo they take lands in one shared album. No app, no accounts.">
+  <meta name="twitter:title" content="Collect every photo and video from your event">
+  <meta name="twitter:description" content="One QR code for every guest photo and video. No app required.">
   <meta name="twitter:image" content="https://getsnapjar.com/assets/img/og.jpg">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/home-v2.css">
+
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "Snapjar",
-    "url": "https://getsnapjar.com/",
-    "image": "https://getsnapjar.com/assets/img/og.jpg",
-    "description": "QR code photo sharing for weddings and parties. Guests scan a code and every photo lands in one shared album. No app to download.",
-    "brand": { "@type": "Brand", "name": "Snapjar" },
-    "offers": [
-      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
-      { "@type": "Offer", "name": "Party", "price": "19.99", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "description": "One time, per event. Unlimited photos and guests, gallery stays up 1 year." },
-      { "@type": "Offer", "name": "Pro", "price": "29.99", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "description": "One time, per event. Includes Party features plus the Table QR Manager." }
+    "@context":"https://schema.org",
+    "@type":"Product",
+    "name":"Snapjar",
+    "url":"https://getsnapjar.com/",
+    "description":"QR photo and video sharing for weddings, parties, and events. Guests scan a QR code and upload directly to one shared album.",
+    "brand":{"@type":"Brand","name":"Snapjar"},
+    "offers":[
+      {"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"},
+      {"@type":"Offer","name":"Party","price":"19.99","priceCurrency":"USD","description":"Unlimited photos and videos up to 1 minute per clip."},
+      {"@type":"Offer","name":"Pro","price":"29.99","priceCurrency":"USD","description":"Unlimited photos and videos up to 5 minutes per clip, plus table QR tools."}
     ]
   }
   </script>
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Snapjar",
-    "url": "https://getsnapjar.com/"
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Do my guests need to download an app?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. The QR code opens a web page and they upload straight from there. It works on iPhone and Android." }
-      },
-      {
-        "@type": "Question",
-        "name": "Can strangers see our photos?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Only people with your album's link or QR code can see it. Album codes are random, so nobody stumbles into your photos." }
-      },
-      {
-        "@type": "Question",
-        "name": "What if someone uploads something dumb?",
-        "acceptedAnswer": { "@type": "Answer", "text": "You're the host, you can delete any photo from your album." }
-      },
-      {
-        "@type": "Question",
-        "name": "Do photos get compressed like in group chats?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. We keep photos at high quality, way above what messaging apps do to them." }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I use it for something that isn't a wedding?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Birthdays, graduations, reunions, baby showers, office parties. If people are taking photos, it works." }
-      }
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {"@type":"Question","name":"Do guests need to download an app?","acceptedAnswer":{"@type":"Answer","text":"No. Guests scan the QR code and upload from their phone browser."}},
+      {"@type":"Question","name":"Can guests upload videos?","acceptedAnswer":{"@type":"Answer","text":"Yes on paid plans. Party allows videos up to 1 minute and Pro allows videos up to 5 minutes."}},
+      {"@type":"Question","name":"Can I use Snapjar for something other than a wedding?","acceptedAnswer":{"@type":"Answer","text":"Yes. Snapjar works for birthdays, graduations, reunions, company events, parties, trips, sports events, and other group events."}}
     ]
   }
   </script>
   <script src="/assets/site.js" defer></script>
 </head>
-<body>
+<body class="home-v2">
 
-  <nav class="nav">
-    <a class="logo" href="/"><img class="logo-mark" src="/assets/logo.svg" alt="Snapjar"><span class="logo-txt">snap<i>jar</i></span></a>
+  <nav class="nav home-nav">
+    <a class="logo" href="/" aria-label="Snapjar home"><img class="logo-mark" src="/assets/logo.svg" alt=""><span class="logo-txt">Snap Jar</span></a>
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#pricing">Pricing</a>
-      <a href="/wedding">Weddings</a>
+      <a href="#events">Use cases</a>
+      <a href="#faq">FAQ</a>
       <a href="/settings" id="nav-account">Sign in</a>
-      <a href="/create" class="btn btn-small">Start an album</a>
+      <a href="/create" class="btn btn-small">Create album</a>
     </div>
   </nav>
 
-  <header class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">For weddings, birthdays, and every party in between</p>
-      <h1>Your guests took 400 photos last night. You saw 12 of them.</h1>
-      <p class="lede">Snapjar fixes that. Put a QR code on the tables, guests scan it, and every photo they take lands in one shared album. Nobody downloads anything. Works on every phone, even your uncle's.</p>
-      <div class="hero-actions">
-        <a href="/create" class="btn btn-big">Create your album, it's free</a>
-        <span class="hero-note">Ready in about 30 seconds. Really.</span>
-      </div>
-    </div>
-    <div class="hero-visual" aria-hidden="true">
-      <div class="polaroid p1"><img class="photo grad-a" src="assets/img/dance.jpg" alt="" loading="eager"><span>the first dance</span></div>
-      <div class="polaroid p2"><img class="photo grad-b" src="assets/img/guest.jpg" alt="" loading="eager"><span>aunt carol's angle</span></div>
-      <div class="polaroid p3"><img class="photo grad-c" src="assets/img/sparkler.jpg" alt="" loading="eager"><span>the sparkler send-off</span></div>
-    </div>
-  </header>
+  <main>
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <h1>Collect every photo and video from your event</h1>
+        <p>Create a Snapjar album, get a QR code, and let your guests upload their photos and videos. No app required.</p>
 
-  <section class="strip">
-    <p>No app to install &nbsp;·&nbsp; No accounts for guests &nbsp;·&nbsp; Photos appear live &nbsp;·&nbsp; You keep everything</p>
-  </section>
+        <div class="hero-points">
+          <div class="hero-point">
+            <div class="hero-point-icon">▣</div>
+            <div><strong>Photos &amp; videos</strong><span>Guests upload straight from their phone. No app needed.</span></div>
+          </div>
+          <div class="hero-point">
+            <div class="hero-point-icon">◎</div>
+            <div><strong>Perfect for any event</strong><span>Weddings, birthdays, graduations, reunions, parties, company events and more.</span></div>
+          </div>
+          <div class="hero-point">
+            <div class="hero-point-icon">♡</div>
+            <div><strong>One place for every memory</strong><span>Everyone adds to the same private event album while the moment is still happening.</span></div>
+          </div>
+        </div>
 
-  <section id="how" class="section">
-    <h2>Three steps, and one of them is "have a party"</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <h3>Make your album</h3>
-        <p>Name your event and you get a QR code instantly. Print it, stick it on the tables, tape it to the bar. Wherever people will see it.</p>
+        <div class="home-hero-actions">
+          <a class="home-btn home-btn-primary" href="/create">Create your album</a>
+          <a class="home-btn home-btn-secondary" href="#pricing">View pricing</a>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <h3>Guests scan and snap</h3>
-        <p>The QR opens the album right in their camera app's browser. They tap once to add photos. That's the whole flow. Grandma can do it.</p>
+
+      <div class="qr-stage">
+        <div class="print-note">Print this<br>for your event →</div>
+        <div class="qr-print-card">
+          <div class="qr-brand">Snap Jar</div>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=600x600&amp;margin=2&amp;data=https%3A%2F%2Fgetsnapjar.com" alt="QR code to getsnapjar.com">
+          <div class="qr-label">Scan to upload<br>photos &amp; videos</div>
+          <div class="qr-powered"><strong>Powered by Snapjar</strong>getsnapjar.com</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <h3>Wake up to everything</h3>
-        <p>Every photo from every phone, in one gallery, in real time. The blurry ones, the perfect ones, the ones you didn't know were taken.</p>
+    </section>
+
+    <section class="benefit-strip" aria-label="Snapjar benefits">
+      <div class="benefit"><span class="benefit-icon">▯</span><div><strong>No app required</strong><span>Just scan and upload</span></div></div>
+      <div class="benefit"><span class="benefit-icon">ϟ</span><div><strong>Quick &amp; easy</strong><span>Guests can upload in seconds</span></div></div>
+      <div class="benefit"><span class="benefit-icon">◇</span><div><strong>Private &amp; simple</strong><span>Only people with your link or QR can open it</span></div></div>
+      <div class="benefit"><span class="benefit-icon">☁</span><div><strong>Photos &amp; videos</strong><span>Capture more than just still moments</span></div></div>
+    </section>
+
+    <section class="home-section" id="how">
+      <h2 class="home-section-title">How it works</h2>
+      <p class="home-section-sub">From empty album to a full night of memories in four simple steps.</p>
+      <div class="how-grid">
+        <div class="how-step"><div class="how-icon">＋</div><h3>1. Create album</h3><p>Name your event and set it up in about a minute.</p></div>
+        <div class="how-step"><div class="how-icon">▦</div><h3>2. Share QR code</h3><p>Print it, text it, or display it at your event.</p></div>
+        <div class="how-step"><div class="how-icon">▯</div><h3>3. Guests upload</h3><p>They scan and add their photos and videos from any phone.</p></div>
+        <div class="how-step"><div class="how-icon">▧</div><h3>4. Relive the memories</h3><p>Enjoy everything together in one shared album.</p></div>
       </div>
+    </section>
+
+    <section class="pricing-wrap" id="pricing">
+      <div class="home-pricing">
+        <h2 class="home-pricing-title">Simple, one-time pricing</h2>
+        <p class="home-section-sub">No subscriptions. Create an album free and upgrade only if you need more.</p>
+
+        <div class="price-grid">
+          <article class="home-price-card">
+            <h3>Free</h3>
+            <div class="home-price">$0</div>
+            <ul>
+              <li>1 event album</li>
+              <li>Up to 25 photos</li>
+              <li class="no">No video uploads</li>
+              <li>QR code sharing</li>
+              <li>Gallery stays up 7 days</li>
+            </ul>
+            <a class="home-btn home-btn-secondary" href="/create">Create free album</a>
+          </article>
+
+          <article class="home-price-card featured">
+            <span class="price-badge">Most popular</span>
+            <h3>Party</h3>
+            <div class="home-price">$19.99<small>one time per event</small></div>
+            <ul>
+              <li>Unlimited photos</li>
+              <li>Videos up to 1 minute</li>
+              <li>Up to 100 MB per video</li>
+              <li>Unlimited guests</li>
+              <li>Download everything</li>
+              <li>Printable QR sign designer</li>
+              <li>1 year access</li>
+            </ul>
+            <a class="home-btn home-btn-primary" href="/create">Create Party album</a>
+          </article>
+
+          <article class="home-price-card">
+            <h3>Pro</h3>
+            <div class="home-price">$29.99<small>one time per event</small></div>
+            <ul>
+              <li>Everything in Party</li>
+              <li>Videos up to 5 minutes</li>
+              <li>Up to 300 MB per video</li>
+              <li>Table QR Manager</li>
+              <li>Personalized QR signs by table</li>
+              <li>Photos organized by table</li>
+              <li>1 year access</li>
+            </ul>
+            <a class="home-btn home-btn-secondary" href="/create">Create Pro album</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-section" id="events">
+      <h2 class="home-section-title">Made for the moments people actually share</h2>
+      <p class="home-section-sub">Same simple QR album, whether there are 20 guests or 200.</p>
+      <div class="use-grid">
+        <a href="/wedding"><strong>Weddings</strong><span>Put QR cards on reception tables</span></a>
+        <a href="/birthday"><strong>Birthdays</strong><span>Collect every angle of the celebration</span></a>
+        <a href="/graduation"><strong>Graduations</strong><span>One album for ceremony and party</span></a>
+        <a href="/family-reunion"><strong>Family reunions</strong><span>Everyone contributes without an app</span></a>
+        <a href="/office-party"><strong>Company events</strong><span>Skip the group chat and shared drive</span></a>
+        <a href="/qr-code-photo-sharing"><strong>Any event</strong><span>If people are taking pictures, it works</span></a>
+      </div>
+    </section>
+
+    <div class="event-gallery" aria-label="Event photo examples">
+      <img src="/assets/img/dance.jpg" alt="Wedding couple dancing" loading="lazy">
+      <img src="/assets/img/guest.jpg" alt="Guests celebrating together" loading="lazy">
+      <img src="/assets/img/sparkler.jpg" alt="Guests with sparklers" loading="lazy">
+      <img src="/assets/img/dance.jpg" alt="Event memories collected in Snapjar" loading="lazy">
     </div>
-  </section>
 
-  <section class="section section-alt">
-    <div class="split">
-      <div>
-        <h2>Why not just make a group chat?</h2>
-        <p>You've tried. Half the guests aren't in it, the photos get compressed to soup, and three weeks later someone says "oh I have a bunch on my phone, remind me to send them." They never send them.</p>
-        <p>Snapjar is one link that works the night of the event, while the photos are still on everyone's camera roll and everyone's still excited about it.</p>
+    <section class="home-section" id="faq">
+      <h2 class="home-section-title">Questions people actually ask</h2>
+      <div class="faq-home">
+        <details><summary>Do guests need to download an app?</summary><p>No. They scan the QR code, the album opens in their phone browser, and they upload from there.</p></details>
+        <details><summary>Can guests upload videos?</summary><p>Yes on paid plans. Party supports videos up to 1 minute and 100 MB each. Pro supports videos up to 5 minutes and 300 MB each.</p></details>
+        <details><summary>Can strangers find our album?</summary><p>Albums are accessed through their private link or QR code. Random album codes make them impractical to guess.</p></details>
+        <details><summary>Is this only for weddings?</summary><p>No. Snapjar works for birthdays, graduations, reunions, trips, company events, sports events, parties, showers, and more.</p></details>
       </div>
-      <div class="quote-card">
-        <p>"We got 340 photos from our wedding before we even left the venue. My mom cried at the breakfast table going through them."</p>
-        <span>The kind of message we're building this for</span>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="pricing" class="section">
-    <h2>Pricing that makes sense for one night</h2>
-    <p class="section-sub">No subscription. You're throwing a party, not signing a contract.</p>
-    <div class="plans">
-      <div class="plan">
-        <h3>Free</h3>
-        <div class="price">$0</div>
-        <ul>
-          <li>1 event album</li>
-          <li>Up to 25 photos</li>
-          <li>QR code included</li>
-          <li>Gallery stays up 7 days</li>
-        </ul>
-        <a href="/create" class="btn btn-outline">Start free</a>
-      </div>
-      <div class="plan plan-featured">
-        <div class="plan-tag">Most people pick this</div>
-        <h3>Party</h3>
-        <div class="price">$19.99 <span>one time, per event</span></div>
-        <ul>
-          <li>Unlimited photos and videos</li>
-          <li>Unlimited guests</li>
-          <li>Gallery stays up 1 year</li>
-          <li>Download everything in one click</li>
-          <li>Printable QR sign designer</li>
-        </ul>
-        <a href="/create" class="btn">Create your album</a>
-      </div>
-      <div class="plan">
-        <h3>Pro</h3>
-        <div class="price">$29.99 <span>one time, per event</span></div>
-        <ul>
-          <li>Everything in Party</li>
-          <li>Table QR Manager</li>
-          <li>A personalized QR sign for every table</li>
-          <li>Print all your table signs at once</li>
-          <li>Photos auto-tagged by table</li>
-        </ul>
-        <a href="/create" class="btn btn-outline">Start free, upgrade later</a>
-      </div>
-    </div>
-    <p class="pricing-note">Start free, upgrade from inside your album whenever you want. Even mid-party.</p>
-  </section>
-
-  <section class="section section-alt">
-    <h2>Questions people actually ask</h2>
-    <div class="faq">
-      <details>
-        <summary>Do my guests need to download an app?</summary>
-        <p>No. That's the whole point. The QR code opens a web page and they upload straight from there. It works on iPhone, Android, and whatever your one friend with the weird phone has.</p>
-      </details>
-      <details>
-        <summary>Can strangers see our photos?</summary>
-        <p>Only people with your album's link or QR code can see it. Album codes are random, so nobody's going to stumble into your wedding photos.</p>
-      </details>
-      <details>
-        <summary>What if someone uploads something dumb?</summary>
-        <p>You're the host, you can delete any photo from your album. It's your party.</p>
-      </details>
-      <details>
-        <summary>Do photos get compressed to mush like in group chats?</summary>
-        <p>We keep them at high quality, way above what messaging apps do to your photos. What goes in looks like what comes out.</p>
-      </details>
-      <details>
-        <summary>Can I use it for something that isn't a wedding?</summary>
-        <p>Absolutely. Birthdays, graduations, reunions, baby showers, the office party, your D&amp;D group's finale. If people are taking photos, it works.</p>
-      </details>
-      <p class="pricing-note"><a href="/faq">More questions, answered</a></p>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>Built for the nights people actually throw</h2>
-    <p class="section-sub">Same QR album. Different guest list.</p>
-    <div class="use-grid">
-      <a href="/wedding"><strong>Weddings</strong><span>QR cards on the reception tables</span></a>
-      <a href="/birthday"><strong>Birthdays</strong><span>Stick it by the cake</span></a>
-      <a href="/baby-shower"><strong>Baby showers</strong><span>Gift table, every generation</span></a>
-      <a href="/graduation"><strong>Graduations</strong><span>Ceremony link, party QR</span></a>
-      <a href="/family-reunion"><strong>Family reunions</strong><span>No more cousin-as-IT</span></a>
-      <a href="/office-party"><strong>Office parties</strong><span>Not another Slack channel</span></a>
-      <a href="/for-photographers"><strong>Photographers</strong><span>A guest-photo answer that is not you</span></a>
-      <a href="/qr-code-photo-sharing"><strong>How the QR works</strong><span>Every event type, one flow</span></a>
-    </div>
-  </section>
-
-  <section class="cta-final">
-    <h2>Your next party deserves better than "text me the pics"</h2>
-    <a href="/create" class="btn btn-big">Create your free album</a>
-  </section>
+    <section class="home-cta">
+      <h2>Give every guest one place to put the memories</h2>
+      <p>Create the album now. Put the QR code wherever people will see it.</p>
+      <a class="home-btn home-btn-primary" href="/create">Create your free album</a>
+    </section>
+  </main>
 
   <script type="module" src="assets/firebase-init.js"></script>
   <script type="module" src="assets/nav.js"></script>
@@ -249,24 +220,18 @@
   <footer class="site-foot">
     <div class="site-foot-grid">
       <div class="site-foot-brand">
-        <a class="logo" href="/"><img class="logo-mark" src="/assets/logo.svg" alt="Snapjar"><span class="logo-txt">snap<i>jar</i></span></a>
-        <p>QR photo sharing for weddings and parties. Guests scan a code. Every photo lands in one album.</p>
+        <a class="logo" href="/"><span class="logo-txt">Snap Jar</span></a>
+        <p>QR photo and video sharing for weddings, parties, and events. Guests scan once and everything lands in one album.</p>
       </div>
-      <div><h3>Events</h3><a href="/wedding">Weddings</a><a href="/birthday">Birthdays</a><a href="/baby-shower">Baby showers</a><a href="/bridal-shower">Bridal showers</a><a href="/bachelorette">Bachelorette parties</a><a href="/engagement-party">Engagement parties</a><a href="/rehearsal-dinner">Rehearsal dinners</a><a href="/graduation">Graduations</a><a href="/family-reunion">Family reunions</a><a href="/quinceanera">Quinceañeras</a><a href="/bar-mitzvah">Bar and bat mitzvahs</a><a href="/anniversary">Anniversaries</a><a href="/holiday-party">Holiday parties</a><a href="/office-party">Office parties</a><a href="/gender-reveal">Gender reveals</a><a href="/retirement-party">Retirement parties</a></div>
+      <div><h3>Events</h3><a href="/wedding">Weddings</a><a href="/birthday">Birthdays</a><a href="/baby-shower">Baby showers</a><a href="/graduation">Graduations</a><a href="/family-reunion">Family reunions</a><a href="/office-party">Office parties</a></div>
       <div><h3>Product</h3><a href="/how-it-works">How it works</a><a href="/pricing">Pricing</a><a href="/faq">FAQ</a><a href="/qr-code-photo-sharing">QR photo sharing</a></div>
       <div><h3>Compare</h3><a href="/guestpix-alternative">Guestpix alternative</a><a href="/wedibox-alternative">Wedibox alternative</a><a href="/pov-alternative">POV alternative</a><a href="/google-photos-shared-album">vs Google Photos</a></div>
-      <div><h3>For vendors</h3><a href="/for-photographers">Photographers</a><a href="/for-wedding-planners">Wedding planners</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
+      <div><h3>Company</h3><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
     </div>
     <div class="site-foot-bottom">
-      <span>Made by one person who was tired of never getting the photos back.</span>
-      <span class="footer-links">
-        <a href="/contact">support@getsnapjar.com</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-      </span>
-      <span class="photo-credits">Photos by <a href="https://www.flickr.com/photos/131772798@N06/16609700990" target="_blank" rel="noopener">geoff.eagle</a> and <a href="https://www.flickr.com/photos/23146606@N05/9639081710" target="_blank" rel="noopener">amywardlaw</a> on Flickr, CC BY</span>
+      <span>Snapjar</span>
+      <span class="footer-links"><a href="/contact">support@getsnapjar.com</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></span>
     </div>
   </footer>
-
 </body>
 </html>
