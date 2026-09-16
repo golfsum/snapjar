@@ -1,6 +1,6 @@
 // Album creation flow.
 
-import { db, ensureSignedIn, track, getFirstTouchAttribution } from "./firebase-init.js";
+import { db, ensureSignedIn, track, getAttributionSnapshot } from "./firebase-init.js";
 import { upgradeUrlFor } from "./config.js";
 import {
   doc, getDoc, setDoc, serverTimestamp
@@ -61,7 +61,7 @@ form.addEventListener("submit", async (e) => {
       code = randomCode();
     }
 
-    const attribution = getFirstTouchAttribution();
+    const attribution = getAttributionSnapshot();
 
     await setDoc(doc(db, "events", code), {
       name: eventName,
@@ -70,15 +70,20 @@ form.addEventListener("submit", async (e) => {
       hostEmail: (!user.isAnonymous && user.email) ? user.email : null,
       paid: false,
       photoCount: 0,
-      attribution,
+      // Keep the legacy field for compatibility with existing admin/reporting.
+      attribution: attribution.firstTouch,
+      firstTouchAttribution: attribution.firstTouch,
+      lastTouchAttribution: attribution.lastTouch,
       createdAt: serverTimestamp()
     });
 
     rememberAlbum(code, eventName);
     track("album_created", {
       album: code,
-      source: attribution.source || "unknown",
-      campaign: attribution.utmCampaign || ""
+      source: attribution.lastTouch.source || attribution.firstTouch.source || "unknown",
+      first_source: attribution.firstTouch.source || "unknown",
+      last_source: attribution.lastTouch.source || "unknown",
+      campaign: attribution.lastTouch.utmCampaign || attribution.firstTouch.utmCampaign || ""
     });
     showSuccess(code, eventName);
   } catch (err) {
