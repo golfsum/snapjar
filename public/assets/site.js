@@ -3,9 +3,27 @@
 
   const MEASUREMENT_ID = "G-V22WH9DVT5";
   const path = window.location.pathname.replace(/\.html$/, "") || "/";
+  let currentEventPlan = null;
 
   // Keep owner-only dashboard activity out of acquisition and conversion data.
   if (path === "/dashboard-q7x2m9" || path === "/admin-q7x2m9") return;
+
+  // Keep the homepage plan cards aligned with the product limits.
+  if (path === "/") {
+    const lede = document.querySelector(".hero .lede");
+    if (lede) lede.textContent = "Snapjar fixes that. Put a QR code on the tables, guests scan it, and every photo they take lands in one shared album. Paid albums can collect videos too. Nobody downloads an app. Works on every phone.";
+    const strip = document.querySelector(".strip p");
+    if (strip) strip.innerHTML = "No app to install &nbsp;·&nbsp; No accounts for guests &nbsp;·&nbsp; Photos + paid video sharing &nbsp;·&nbsp; You keep everything";
+    const planEls = [...document.querySelectorAll("#pricing .plan")];
+    for (const plan of planEls) {
+      const name = plan.querySelector("h3")?.textContent?.trim();
+      const list = plan.querySelector("ul");
+      if (!list) continue;
+      if (name === "Free") list.innerHTML = "<li>1 event album</li><li>Up to 25 photos</li><li>Photos only</li><li>QR code included</li><li>Gallery stays up 7 days</li>";
+      if (name === "Party") list.innerHTML = "<li>Unlimited photos</li><li>Videos up to 1 minute each</li><li>Unlimited guests</li><li>Gallery stays up 1 year</li><li>Download everything in one click</li><li>Printable QR sign designer</li>";
+      if (name === "Pro") list.innerHTML = "<li>Everything in Party</li><li>Videos up to 5 minutes each</li><li>Table QR Manager</li><li>A personalized QR sign for every table</li><li>Print all your table signs at once</li><li>Photos auto-tagged by table</li>";
+    }
+  }
 
   // Album pages resolve the real Firebase identity before analytics or access
   // history. A successfully opened album is remembered only for that uid.
@@ -23,6 +41,7 @@
       if (code) {
         const snap = await firestore.getDoc(firestore.doc(db, "events", code));
         if (snap.exists()) {
+          currentEventPlan = snap.data();
           const key = `snapjar_visited:${user.uid}`;
           let list = [];
           try {
@@ -35,6 +54,74 @@
         }
       }
     } catch { return; }
+
+    // Intercept video selections before event.js uploads them. Photos pass
+    // through untouched. Valid videos are re-dispatched to the normal uploader.
+    document.addEventListener("change", async function videoPlanGuard(event) {
+      const input = event.target;
+      if (!input || input.id !== "file-input") return;
+      if (input.dataset.videoValidated === "1") {
+        delete input.dataset.videoValidated;
+        return;
+      }
+
+      const files = [...(input.files || [])];
+      const videos = files.filter((file) => (file.type || "").startsWith("video/"));
+      if (!videos.length) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (!currentEventPlan?.paid) {
+        input.value = "";
+        alert("Video uploads are available on paid Snapjar albums. Party supports clips up to 1 minute and Pro supports clips up to 5 minutes.");
+        return;
+      }
+
+      const isPro = !!currentEventPlan.pro;
+      const maxSeconds = isPro ? 300 : 60;
+      const maxBytes = (isPro ? 300 : 100) * 1024 * 1024;
+
+      try {
+        for (const file of videos) {
+          if (file.size > maxBytes) {
+            throw new Error(`${isPro ? "Pro" : "Party"} videos must be under ${isPro ? 300 : 100} MB each.`);
+          }
+          const duration = await videoDuration(file);
+          if (!Number.isFinite(duration) || duration <= 0) throw new Error("We couldn't read that video's duration. Try a standard MP4 or MOV file.");
+          if (duration > maxSeconds + 0.5) {
+            throw new Error(`${isPro ? "Pro" : "Party"} videos can be up to ${isPro ? "5 minutes" : "1 minute"} each.`);
+          }
+        }
+
+        const transfer = new DataTransfer();
+        for (const file of files) transfer.items.add(file);
+        input.files = transfer.files;
+        input.dataset.videoValidated = "1";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      } catch (err) {
+        input.value = "";
+        alert(err?.message || "That video doesn't fit this album's plan.");
+      }
+    }, true);
+  }
+
+  function videoDuration(file) {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      const url = URL.createObjectURL(file);
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        URL.revokeObjectURL(url);
+        resolve(duration);
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("We couldn't read that video's duration. Try a standard MP4 or MOV file."));
+      };
+      video.src = url;
+    });
   }
 
   function cleanUrl(value) {
