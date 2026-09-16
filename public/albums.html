@@ -14,7 +14,8 @@
     .user-dashboard{max-width:1040px;margin:0 auto;padding:48px clamp(20px,5vw,56px) 80px}
     .dash-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:28px}
     .dash-head h1{font-size:clamp(2rem,4vw,3rem);margin-bottom:8px}.dash-head p{color:var(--ink-soft);max-width:620px}
-    .dash-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .dash-actions{display:flex;gap:10px;flex-wrap:nowrap;align-items:center;white-space:nowrap}
+    .dash-actions .btn{flex:0 0 auto}
     .dash-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0 34px}
     .dash-stat{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.03)}
     .dash-stat span{display:block;color:var(--ink-soft);font-size:.85rem;font-weight:600}.dash-stat strong{display:block;font-size:1.8rem;margin-top:4px}
@@ -25,7 +26,7 @@
     .dash-empty{padding:38px;text-align:center;border:1px dashed var(--line);border-radius:16px;background:var(--paper-deep)}
     .dash-empty p{color:var(--ink-soft);margin-bottom:16px}
     .signedout-note{display:none}
-    @media(max-width:760px){.dash-head{display:block}.dash-actions{margin-top:18px}.dash-stats,.dashboard-grid{grid-template-columns:1fr}.user-dashboard{padding-top:30px}}
+    @media(max-width:760px){.dash-head{display:block}.dash-actions{margin-top:18px;flex-wrap:wrap;white-space:normal}.dash-stats,.dashboard-grid{grid-template-columns:1fr}.user-dashboard{padding-top:30px}}
   </style>
   <script src="/assets/site.js" defer></script>
 </head>
