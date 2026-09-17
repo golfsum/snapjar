@@ -84,7 +84,15 @@ service cloud.firestore {
             || get(/databases/$(database)/documents/events/$(code)).data.photoCount < 25
           );
 
-        allow update: if false;
+        // The uploader may attach only the QR table/zone metadata to their own
+        // upload. This keeps creator identity separate from the table/area QR.
+        allow update: if request.auth != null
+          && resource.data.uploaderUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['zone', 'zoneSource'])
+          && request.resource.data.zone is string
+          && request.resource.data.zone.size() > 0
+          && request.resource.data.zone.size() <= 60
+          && request.resource.data.zoneSource == 'qr';
 
         // The uploader can remove their own photo. The host can remove any.
         allow delete: if isAdmin() || (request.auth != null && (
